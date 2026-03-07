@@ -1,8 +1,6 @@
 import express from 'express';
 import multer from 'multer';
 import { AuthRequest, authMiddleware } from '../middleware/auth';
-import { ComputerVisionClient } from '@azure/cognitiveservices-computervision';
-import { ApiKeyCredentials } from '@azure/ms-rest-js';
 
 const router = express.Router();
 
@@ -18,16 +16,6 @@ const upload = multer({
   },
 });
 
-// Azure Computer Vision setup
-const computerVisionClient = new ComputerVisionClient(
-  new ApiKeyCredentials({
-    inHeader: {
-      'Ocp-Apim-Subscription-Key': process.env.AZURE_VISION_KEY || '',
-    },
-  }),
-  process.env.AZURE_VISION_ENDPOINT || ''
-);
-
 router.post('/upload-image', authMiddleware, upload.single('image'), async (req: AuthRequest, res) => {
   try {
     if (!req.file) {
@@ -36,67 +24,100 @@ router.post('/upload-image', authMiddleware, upload.single('image'), async (req:
 
     const userId = req.user.id;
     const imageBuffer = req.file.buffer;
+    const apiKey = process.env.AZURE_VISION_KEY;
+    const endpoint = process.env.AZURE_VISION_ENDPOINT;
 
-    // Call Azure Computer Vision OCR
-    const result = await computerVisionClient.readInStream(imageBuffer, {
-      language: 'en',
-      readingOrder: 'natural',
+    if (!apiKey || !endpoint) {
+      console.error('Azure Vision credentials missing');
+      return res.status(500).json({ error: 'Azure Vision API not configured' });
+    }
+
+    // Call Azure Computer Vision OCR using REST API
+    const readUrl = `${endpoint}vision/v3.2/read/analyze`;
+
+    const response = await fetch(readUrl, {
+      method: 'POST',
+      headers: {
+        'Ocp-Apim-Subscription-Key': apiKey,
+        'Content-Type': 'application/octet-stream',
+      },
+      body: imageBuffer,
     });
 
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('Azure Vision API error:', response.status, errorText);
+      return res.status(500).json({ 
+        error: `Azure Vision API error: ${response.status}` 
+      });
+    }
+
+    // Get the operation location to poll for results
+    const operationLocation = response.headers.get('Operation-Location');
+    if (!operationLocation) {
+      console.error('No operation location returned from Azure Vision');
+      return res.status(500).json({ error: 'Failed to process image: No operation location' });
+    }
+
+    // Poll for results
     let extractedText = '';
+    let attempts = 0;
+    const maxAttempts = 30;
 
-    // Wait for the operation to complete
-    const operationLocation = result.operationLocation;
-    if (operationLocation) {
-      const operationId = operationLocation.split('/').pop();
-      if (operationId) {
-        let readResult;
-        let attempts = 0;
-        const maxAttempts = 10;
+    while (attempts < maxAttempts) {
+      await new Promise(resolve => setTimeout(resolve, 500));
 
-        do {
-          await new Promise(resolve => setTimeout(resolve, 1000));
-          readResult = await computerVisionClient.getReadResult(operationId);
-          attempts++;
-        } while (
-          readResult.status !== 'succeeded' &&
-          readResult.status !== 'failed' &&
-          attempts < maxAttempts
-        );
+      const resultResponse = await fetch(operationLocation, {
+        method: 'GET',
+        headers: {
+          'Ocp-Apim-Subscription-Key': apiKey,
+        },
+      });
 
-        if (readResult.status === 'succeeded') {
-          for (const page of readResult.analyzeResult?.readResults || []) {
-            for (const line of page.lines || []) {
+      if (!resultResponse.ok) {
+        const errorText = await resultResponse.text();
+        console.error('Azure Vision poll error:', resultResponse.status, errorText);
+        attempts++;
+        continue;
+      }
+
+      const result = (await resultResponse.json()) as {
+        status: string;
+        analyzeResult?: {
+          readResults: Array<{ lines: Array<{ text: string }> }>;
+        };
+      };
+
+      if (result.status === 'succeeded') {
+        // Extract text from results
+        if (result.analyzeResult && result.analyzeResult.readResults) {
+          for (const page of result.analyzeResult.readResults) {
+            for (const line of page.lines) {
               extractedText += line.text + '\n';
             }
           }
         }
+        break;
+      } else if (result.status === 'failed') {
+        console.error('Azure Vision processing failed');
+        return res.status(500).json({ error: 'Image processing failed' });
       }
+
+      attempts++;
     }
 
-    // Create note with extracted text
-    const note = {
-      id: `image_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-      userId,
-      subjectId: req.body.subjectId || null,
-      rawText: extractedText.trim() || 'No text could be extracted from this image.',
-      extractedText: extractedText.trim(),
-      sourceType: 'IMAGE',
-      fileUrl: null, // In a real app, you'd upload the image to cloud storage
-      createdAt: new Date(),
-      title: 'Image Note',
-    };
-
-    // In a real app, you'd save to database
-    // For now, we'll just return the extracted text
+    if (attempts >= maxAttempts) {
+      console.error('Azure Vision polling timeout');
+      return res.status(500).json({ error: 'Image processing timed out' });
+    }
 
     res.json({
-      note,
       extractedText: extractedText.trim() || 'No text could be extracted from this image.',
     });
   } catch (error) {
     console.error('OCR Error:', error);
-    res.status(500).json({ error: 'Failed to process image' });
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    res.status(500).json({ error: `Failed to process image: ${errorMessage}` });
   }
 });
 

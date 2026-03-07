@@ -22,16 +22,33 @@ router.post('/', authMiddleware, async (req: AuthRequest, res) => {
     const { name, examDate, confidenceLevel } = req.body;
     const userId = req.user.id;
 
+    if (!name || !name.trim()) {
+      return res.status(400).json({ error: 'Subject name is required' });
+    }
+
+    // Check if subject already exists
+    const existing = await prisma.subject.findFirst({
+      where: {
+        userId,
+        name: name.trim(),
+      },
+    });
+
+    if (existing) {
+      return res.json(existing);
+    }
+
     const subject = await prisma.subject.create({
       data: {
         userId,
-        name,
+        name: name.trim(),
         examDate: examDate ? new Date(examDate) : null,
         confidenceLevel: confidenceLevel || 3,
       },
     });
     res.json(subject);
   } catch (error) {
+    console.error('Subject creation error:', error);
     res.status(500).json({ error: 'Server error' });
   }
 });

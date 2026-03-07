@@ -28,7 +28,11 @@ const Notes: React.FC = () => {
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [uploadingImage, setUploadingImage] = useState(false);
   const [extractedText, setExtractedText] = useState('');
+  const [imageError, setImageError] = useState('');
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [showCreateSubject, setShowCreateSubject] = useState(false);
+  const [newSubjectName, setNewSubjectName] = useState('');
+  const [creatingSubject, setCreatingSubject] = useState(false);
 
   // Form states
   const [title, setTitle] = useState('');
@@ -74,6 +78,42 @@ const Notes: React.FC = () => {
     }
   };
 
+  const createSubject = async () => {
+    if (!newSubjectName.trim()) {
+      toast.error('Please enter a subject name');
+      return;
+    }
+
+    setCreatingSubject(true);
+    try {
+      const response = await fetch('/api/subjects', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${localStorage.getItem('token')}`,
+        },
+        body: JSON.stringify({
+          name: newSubjectName.trim(),
+        }),
+      });
+
+      if (response.ok) {
+        const newSubject = await response.json();
+        setSubjects([...subjects, newSubject]);
+        setSelectedSubjectId(newSubject.id);
+        setNewSubjectName('');
+        setShowCreateSubject(false);
+        toast.success('Subject created!');
+      } else {
+        toast.error('Failed to create subject');
+      }
+    } catch (error) {
+      toast.error('Failed to create subject');
+    } finally {
+      setCreatingSubject(false);
+    }
+  };
+
   const handleCreateNote = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!content.trim()) {
@@ -113,6 +153,7 @@ const Notes: React.FC = () => {
   const handleImageUpload = async (file: File) => {
     setUploadingImage(true);
     setExtractedText('');
+    setImageError('');
 
     const formData = new FormData();
     formData.append('image', file);
@@ -131,10 +172,15 @@ const Notes: React.FC = () => {
         setExtractedText(data.extractedText || 'No text extracted from image');
         toast.success('Image processed successfully!');
       } else {
-        toast.error('Failed to process image');
+        const errorData = await response.json();
+        const errorMsg = errorData.error || 'Failed to process image';
+        setImageError(errorMsg);
+        toast.error(errorMsg);
       }
     } catch (error) {
-      toast.error('Failed to upload image');
+      const errorMsg = error instanceof Error ? error.message : 'Failed to upload image';
+      setImageError(errorMsg);
+      toast.error(errorMsg);
     } finally {
       setUploadingImage(false);
     }
@@ -234,18 +280,28 @@ const Notes: React.FC = () => {
 
               <div>
                 <label className="block text-sm font-medium text-gray-300 mb-2">Subject (Optional)</label>
-                <select
-                  value={selectedSubjectId}
-                  onChange={(e) => setSelectedSubjectId(e.target.value)}
-                  className="w-full px-4 py-3 bg-white/5 border border-white/20 rounded-lg text-white focus:outline-none focus:border-[var(--color-primary)]"
-                >
-                  <option value="">Select a subject...</option>
-                  {subjects.map((subject) => (
-                    <option key={subject.id} value={subject.id}>
-                      {subject.name}
-                    </option>
-                  ))}
-                </select>
+                <div className="flex gap-2">
+                  <select
+                    value={selectedSubjectId}
+                    onChange={(e) => setSelectedSubjectId(e.target.value)}
+                    className="flex-1 px-4 py-3 bg-white/5 border border-white/20 rounded-lg text-white focus:outline-none focus:border-[var(--color-primary)]"
+                  >
+                    <option value="">Select a subject...</option>
+                    {subjects.map((subject) => (
+                      <option key={subject.id} value={subject.id}>
+                        {subject.name}
+                      </option>
+                    ))}
+                  </select>
+                  <button
+                    type="button"
+                    onClick={() => setShowCreateSubject(true)}
+                    className="px-4 py-3 bg-white/10 hover:bg-white/20 border border-white/20 rounded-lg text-white transition-colors"
+                    title="Create new subject"
+                  >
+                    +
+                  </button>
+                </div>
               </div>
 
               <div>
@@ -280,6 +336,60 @@ const Notes: React.FC = () => {
         </div>
       )}
 
+      {/* Create Subject Modal */}
+      {showCreateSubject && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white/10 backdrop-blur-xl border border-white/20 rounded-2xl p-6 w-full max-w-md">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-xl font-bold text-white">Create New Subject</h2>
+              <button
+                onClick={() => {
+                  setShowCreateSubject(false);
+                  setNewSubjectName('');
+                }}
+                className="text-gray-400 hover:text-white transition-colors"
+              >
+                <X className="h-6 w-6" />
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2">Subject Name</label>
+                <input
+                  type="text"
+                  value={newSubjectName}
+                  onChange={(e) => setNewSubjectName(e.target.value)}
+                  onKeyPress={(e) => e.key === 'Enter' && createSubject()}
+                  className="w-full px-4 py-3 bg-white/5 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-[var(--color-primary)]"
+                  placeholder="e.g., Data Structures, Machine Learning..."
+                  autoFocus
+                />
+              </div>
+
+              <div className="flex justify-end space-x-4">
+                <button
+                  onClick={() => {
+                    setShowCreateSubject(false);
+                    setNewSubjectName('');
+                  }}
+                  className="px-6 py-3 border border-white/20 text-white rounded-lg hover:bg-white/10 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={createSubject}
+                  disabled={creatingSubject}
+                  className="px-6 py-3 bg-[var(--color-primary)] hover:bg-blue-600 text-white rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {creatingSubject ? 'Creating...' : 'Create'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Image Upload Section */}
       <div className="mb-8">
         <div
@@ -304,6 +414,12 @@ const Notes: React.FC = () => {
           <div className="mt-4 text-center">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[var(--color-primary)] mx-auto"></div>
             <p className="text-gray-400 mt-2">Processing image...</p>
+          </div>
+        )}
+
+        {imageError && (
+          <div className="mt-4 bg-red-500/20 border border-red-500/50 rounded-xl p-4">
+            <p className="text-red-300 text-sm">{imageError}</p>
           </div>
         )}
 
