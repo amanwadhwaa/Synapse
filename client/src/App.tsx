@@ -4,10 +4,9 @@ import { useAuthStore } from './stores/auth'
 import toast, { Toaster } from 'react-hot-toast'
 import Landing from './pages/Landing'
 import Dashboard from './pages/Dashboard'
+import Notes from './pages/Notes'
+import NoteDetail from './pages/NoteDetail'
 import Layout from './components/Layout'
-
-// Placeholder components for other pages
-const Notes = () => <div className="p-6"><h1 className="text-2xl font-bold text-white">Notes</h1></div>
 const Planner = () => <div className="p-6"><h1 className="text-2xl font-bold text-white">Study Planner</h1></div>
 const Quizzes = () => <div className="p-6"><h1 className="text-2xl font-bold text-white">Quizzes</h1></div>
 const Performance = () => <div className="p-6"><h1 className="text-2xl font-bold text-white">Performance</h1></div>
@@ -153,6 +152,16 @@ function App() {
             <ProtectedRoute>
               <Layout>
                 <Notes />
+              </Layout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/notes/:id"
+          element={
+            <ProtectedRoute>
+              <Layout>
+                <NoteDetail />
               </Layout>
             </ProtectedRoute>
           }

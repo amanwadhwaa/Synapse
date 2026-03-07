@@ -8,6 +8,8 @@ import { router as authRoutes } from './routes/auth';
 import notesRoutes from './routes/notes';
 import subjectsRoutes from './routes/subjects';
 import sessionsRoutes from './routes/sessions';
+import imageRoutes from './routes/image';
+import aiRoutes from './routes/ai';
 
 dotenv.config();
 
@@ -28,6 +30,8 @@ app.use('/api/auth', authRoutes);
 app.use('/api/notes', notesRoutes);
 app.use('/api/subjects', subjectsRoutes);
 app.use('/api/sessions', sessionsRoutes);
+app.use('/api/notes', imageRoutes); // Mount image routes under /api/notes
+app.use('/api/ai', aiRoutes);
 
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok' });
