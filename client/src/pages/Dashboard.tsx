@@ -1,12 +1,15 @@
 import { BookOpen, Clock, Target, TrendingUp } from 'lucide-react'
+import ActivityHeatmap from '../components/ActivityHeatmap';
 
 function Dashboard() {
+  // TODO: Replace with actual user from auth store
+  const userName = "User";
   return (
     <div className="p-6">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-4xl font-bold text-white mb-2">Welcome back!</h1>
+          <h1 className="text-4xl font-bold text-white mb-2">Welcome back, {userName}!</h1>
           <p className="text-gray-400 text-lg">Ready to continue your learning journey?</p>
         </div>
 
@@ -73,7 +76,10 @@ function Dashboard() {
           </div>
         </div>
 
-        {/* Quick Actions */}
+        {/* Activity Heatmap */}
+        <ActivityHeatmap />
+
+        {/* Quick Actions & Recent Activity */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-6">
             <h2 className="text-2xl font-semibold text-white mb-6">Quick Actions</h2>
