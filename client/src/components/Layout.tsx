@@ -14,6 +14,7 @@ import {
 } from 'lucide-react'
 import { useAuthStore } from '../stores/auth'
 import { useState } from 'react'
+import PomodoroTimer from './PomodoroTimer'
 
 interface LayoutProps {
   children: React.ReactNode
@@ -141,6 +142,9 @@ function Layout({ children }: LayoutProps) {
           {children}
         </main>
       </div>
+
+      {/* Pomodoro Timer */}
+      <PomodoroTimer />
     </div>
   )
 }

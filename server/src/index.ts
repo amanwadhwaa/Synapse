@@ -6,6 +6,8 @@ import dotenv from 'dotenv';
 import prisma from './prisma';
 import { router as authRoutes } from './routes/auth';
 import notesRoutes from './routes/notes';
+import subjectsRoutes from './routes/subjects';
+import sessionsRoutes from './routes/sessions';
 
 dotenv.config();
 
@@ -24,6 +26,8 @@ const PORT = process.env.PORT || 5000;
 
 app.use('/api/auth', authRoutes);
 app.use('/api/notes', notesRoutes);
+app.use('/api/subjects', subjectsRoutes);
+app.use('/api/sessions', sessionsRoutes);
 
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok' });
