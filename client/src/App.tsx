@@ -15,6 +15,7 @@ import NoteDetail from "./pages/NoteDetail";
 import StudyPlanner from "./pages/StudyPlanner";
 import Layout from "./components/Layout";
 import StudySession from "./pages/StudySession";
+import Profile from "./pages/Profile";
 
 const Quizzes = () => (
   <div className="p-6">
@@ -24,11 +25,6 @@ const Quizzes = () => (
 const Performance = () => (
   <div className="p-6">
     <h1 className="text-2xl font-bold text-white">Performance</h1>
-  </div>
-);
-const Profile = () => (
-  <div className="p-6">
-    <h1 className="text-2xl font-bold text-white">Profile</h1>
   </div>
 );
 
@@ -226,11 +222,9 @@ function App() {
         <Route
           path="/profile"
           element={
-            <ProtectedRoute>
-              <Layout>
-                <Profile />
-              </Layout>
-            </ProtectedRoute>
+            <Layout>
+              <Profile />
+            </Layout>
           }
         />
       </Routes>
