@@ -8,6 +8,18 @@ function Dashboard() {
   const navigate = useNavigate();
   const { user } = useAuthStore();
   const firstName = user?.name?.split(" ")[0] || "there";
+
+  const startStudySession = () => {
+    const minutes = prompt("Enter study time in minutes");
+
+    if (!minutes || isNaN(Number(minutes)) || Number(minutes) <= 0) {
+      alert("Please enter a valid number of minutes");
+      return;
+    }
+
+    navigate(`/study-session?time=${minutes}`);
+  };
+
   return (
     <div className="px-6 pt-6">
       <div className="max-w-7xl mx-auto">
@@ -101,8 +113,8 @@ function Dashboard() {
                 Create New Note
               </button>
               <button
-                onClick={() => navigate("/study-planner")}
-                className="w-full border border-white/20 hover:border-white/30 text-white px-6 py-4 rounded-xl transition-all duration-200 backdrop-blur-sm bg-white/5 hover:bg-white/10 text-left font-medium"
+                onClick={startStudySession}
+                className="w-full bg-[var(--color-primary)] hover:bg-blue-600 text-white px-6 py-4 rounded-xl transition-all duration-200 shadow-lg shadow-blue-500/25 hover:shadow-blue-500/40 transform hover:scale-105 text-left font-medium"
               >
                 Start Study Session
               </button>

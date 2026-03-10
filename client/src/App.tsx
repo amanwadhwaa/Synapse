@@ -14,6 +14,7 @@ import Notes from "./pages/Notes";
 import NoteDetail from "./pages/NoteDetail";
 import StudyPlanner from "./pages/StudyPlanner";
 import Layout from "./components/Layout";
+import StudySession from "./pages/StudySession";
 
 const Quizzes = () => (
   <div className="p-6">
@@ -221,6 +222,7 @@ function App() {
             </ProtectedRoute>
           }
         />
+        <Route path="/study-session" element={<StudySession />} />
         <Route
           path="/profile"
           element={
