@@ -1,5 +1,5 @@
 node_modules
 # Keep environment variables out of version control
 .env
-
+DATABASE_URL="postgresql://neondb_owner:npg_xY69ThbqSZLo@ep-lucky-sea-a4bmoi91-pooler.us-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require"
 /generated/prisma
