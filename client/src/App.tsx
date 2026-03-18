@@ -5,7 +5,9 @@ import {
   Route,
   Navigate,
   useNavigate,
+  Link,
 } from "react-router-dom";
+import { Brain } from "lucide-react";
 import { useAuthStore } from "./stores/auth";
 import toast, { Toaster } from "react-hot-toast";
 import Landing from "./pages/Landing";
@@ -16,12 +18,8 @@ import StudyPlanner from "./pages/StudyPlanner";
 import Layout from "./components/Layout";
 import StudySession from "./pages/StudySession";
 import Profile from "./pages/Profile";
-
-const Quizzes = () => (
-  <div className="p-6">
-    <h1 className="text-2xl font-bold text-white">Quizzes</h1>
-  </div>
-);
+import Quizzes from "./pages/Quizzes";
+import QuizAttempt from "./pages/QuizAttempt";
 const Performance = () => (
   <div className="p-6">
     <h1 className="text-2xl font-bold text-white">Performance</h1>
@@ -47,18 +45,34 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen bg-slate-900 flex items-center justify-center">
-      <div className="bg-slate-800 p-8 rounded-lg border border-slate-700 max-w-md w-full">
-        <h2 className="text-2xl font-bold text-white mb-6 text-center">
-          Sign In
-        </h2>
+    <div className="min-h-screen bg-[var(--color-background)] relative overflow-hidden px-6 py-10 flex items-center justify-center">
+      <div className="absolute inset-0 bg-gradient-to-br from-blue-900/20 via-transparent to-purple-900/20"></div>
+      <div className="absolute -top-24 -left-12 w-80 h-80 bg-blue-500/12 rounded-full blur-3xl"></div>
+      <div className="absolute top-1/3 right-0 w-72 h-72 bg-cyan-500/10 rounded-full blur-3xl"></div>
+      <div className="absolute -bottom-24 left-1/2 -translate-x-1/2 w-96 h-96 bg-purple-500/10 rounded-full blur-3xl"></div>
+
+      <div className="relative w-full max-w-md bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-8 shadow-2xl shadow-blue-900/20">
+        <div className="flex flex-col items-center text-center mb-7">
+          <div className="relative mb-3">
+            <Brain className="h-10 w-10 text-[var(--color-primary)]" />
+            <div className="absolute -top-1 -right-1 h-3 w-3 rounded-full bg-[var(--color-primary)] animate-pulse"></div>
+          </div>
+          <span className="text-2xl font-bold tracking-wide bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent">
+            SYNAPSE
+          </span>
+          <h2 className="mt-3 text-3xl font-extrabold bg-gradient-to-r from-blue-300 via-white to-cyan-300 bg-clip-text text-transparent">
+            Welcome Back
+          </h2>
+          <p className="mt-2 text-sm text-gray-300">Sign in to continue your learning journey.</p>
+        </div>
+
         <form onSubmit={handleSubmit} className="space-y-4">
           <input
             type="email"
             placeholder="Email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="w-full px-4 py-3 bg-slate-700 border border-slate-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full rounded-xl border border-white/10 bg-slate-900/70 px-4 py-3 text-white placeholder:text-white/50 focus:border-blue-400/70 focus:outline-none focus:ring-2 focus:ring-blue-500/40 transition"
             required
           />
           <input
@@ -66,16 +80,26 @@ const Login = () => {
             placeholder="Password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className="w-full px-4 py-3 bg-slate-700 border border-slate-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full rounded-xl border border-white/10 bg-slate-900/70 px-4 py-3 text-white placeholder:text-white/50 focus:border-blue-400/70 focus:outline-none focus:ring-2 focus:ring-blue-500/40 transition"
             required
           />
           <button
             type="submit"
-            className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-lg transition-colors"
+            className="group w-full rounded-xl bg-gradient-to-r from-blue-600 to-cyan-500 text-white py-3 font-semibold shadow-lg shadow-blue-500/30 transition-all duration-200 hover:from-blue-500 hover:to-cyan-400 hover:shadow-blue-500/45 hover:scale-[1.01]"
           >
             Sign In
           </button>
         </form>
+
+        <p className="mt-6 text-center text-sm text-gray-300">
+          New to SYNAPSE?{" "}
+          <Link
+            to="/register"
+            className="font-semibold text-blue-300 hover:text-blue-200 transition-colors"
+          >
+            Create Account
+          </Link>
+        </p>
       </div>
     </div>
   );
@@ -102,18 +126,34 @@ const Register = () => {
   };
 
   return (
-    <div className="min-h-screen bg-slate-900 flex items-center justify-center">
-      <div className="bg-slate-800 p-8 rounded-lg border border-slate-700 max-w-md w-full">
-        <h2 className="text-2xl font-bold text-white mb-6 text-center">
-          Create Account
-        </h2>
+    <div className="min-h-screen bg-[var(--color-background)] relative overflow-hidden px-6 py-10 flex items-center justify-center">
+      <div className="absolute inset-0 bg-gradient-to-br from-blue-900/20 via-transparent to-purple-900/20"></div>
+      <div className="absolute -top-24 -left-12 w-80 h-80 bg-blue-500/12 rounded-full blur-3xl"></div>
+      <div className="absolute top-1/3 right-0 w-72 h-72 bg-cyan-500/10 rounded-full blur-3xl"></div>
+      <div className="absolute -bottom-24 left-1/2 -translate-x-1/2 w-96 h-96 bg-purple-500/10 rounded-full blur-3xl"></div>
+
+      <div className="relative w-full max-w-md bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-8 shadow-2xl shadow-blue-900/20">
+        <div className="flex flex-col items-center text-center mb-7">
+          <div className="relative mb-3">
+            <Brain className="h-10 w-10 text-[var(--color-primary)]" />
+            <div className="absolute -top-1 -right-1 h-3 w-3 rounded-full bg-[var(--color-primary)] animate-pulse"></div>
+          </div>
+          <span className="text-2xl font-bold tracking-wide bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent">
+            SYNAPSE
+          </span>
+          <h2 className="mt-3 text-3xl font-extrabold bg-gradient-to-r from-blue-300 via-white to-cyan-300 bg-clip-text text-transparent">
+            Join SYNAPSE
+          </h2>
+          <p className="mt-2 text-sm text-gray-300">Create your account and start learning smarter.</p>
+        </div>
+
         <form onSubmit={handleSubmit} className="space-y-4">
           <input
             type="text"
             placeholder="Full Name"
             value={name}
             onChange={(e) => setName(e.target.value)}
-            className="w-full px-4 py-3 bg-slate-700 border border-slate-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full rounded-xl border border-white/10 bg-slate-900/70 px-4 py-3 text-white placeholder:text-white/50 focus:border-blue-400/70 focus:outline-none focus:ring-2 focus:ring-blue-500/40 transition"
             required
           />
           <input
@@ -121,7 +161,7 @@ const Register = () => {
             placeholder="Email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="w-full px-4 py-3 bg-slate-700 border border-slate-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full rounded-xl border border-white/10 bg-slate-900/70 px-4 py-3 text-white placeholder:text-white/50 focus:border-blue-400/70 focus:outline-none focus:ring-2 focus:ring-blue-500/40 transition"
             required
           />
           <input
@@ -129,16 +169,26 @@ const Register = () => {
             placeholder="Password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className="w-full px-4 py-3 bg-slate-700 border border-slate-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full rounded-xl border border-white/10 bg-slate-900/70 px-4 py-3 text-white placeholder:text-white/50 focus:border-blue-400/70 focus:outline-none focus:ring-2 focus:ring-blue-500/40 transition"
             required
           />
           <button
             type="submit"
-            className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-lg transition-colors"
+            className="group w-full rounded-xl bg-gradient-to-r from-blue-600 to-cyan-500 text-white py-3 font-semibold shadow-lg shadow-blue-500/30 transition-all duration-200 hover:from-blue-500 hover:to-cyan-400 hover:shadow-blue-500/45 hover:scale-[1.01]"
           >
             Create Account
           </button>
         </form>
+
+        <p className="mt-6 text-center text-sm text-gray-300">
+          Already have an account?{" "}
+          <Link
+            to="/login"
+            className="font-semibold text-blue-300 hover:text-blue-200 transition-colors"
+          >
+            Sign In
+          </Link>
+        </p>
       </div>
     </div>
   );
@@ -204,6 +254,16 @@ function App() {
             <ProtectedRoute>
               <Layout>
                 <Quizzes />
+              </Layout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/quizzes/:id"
+          element={
+            <ProtectedRoute>
+              <Layout>
+                <QuizAttempt />
               </Layout>
             </ProtectedRoute>
           }

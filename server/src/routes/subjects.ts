@@ -53,4 +53,34 @@ router.post('/', authMiddleware, async (req: AuthRequest, res) => {
   }
 });
 
+router.delete('/:id', authMiddleware, async (req: AuthRequest, res) => {
+  try {
+    const userId = req.user.id;
+    const subjectId = String(req.params.id);
+
+    const existing = await prisma.subject.findFirst({
+      where: {
+        id: subjectId,
+        userId,
+      },
+      select: { id: true },
+    });
+
+    if (!existing) {
+      return res.status(404).json({ error: 'Subject not found' });
+    }
+
+    await prisma.subject.delete({
+      where: {
+        id: subjectId,
+      },
+    });
+
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Subject delete error:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
 export default router;

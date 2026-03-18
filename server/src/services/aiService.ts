@@ -17,6 +17,18 @@ function cleanOCR(text: string) {
     .trim();
 }
 
+export interface ChatMessage {
+  role: "user" | "assistant";
+  content: string;
+}
+
+export interface GeneratedQuizQuestion {
+  question: string;
+  options: string[];
+  correctIndex: number;
+  explanation: string;
+}
+
 async function callAI(prompt: string) {
   const completion = await client.chat.completions.create({
     model: "llama-3.3-70b-versatile",
@@ -105,4 +117,159 @@ ${cleaned}
 `;
 
   return callAI(prompt);
+}
+
+function normalizeGeneratedQuestions(
+  rawQuestions: unknown,
+): GeneratedQuizQuestion[] {
+  if (!Array.isArray(rawQuestions)) return [];
+
+  return rawQuestions
+    .map((item) => {
+      if (!item || typeof item !== "object") return null;
+
+      const maybeQuestion = item as {
+        question?: unknown;
+        options?: unknown;
+        correctIndex?: unknown;
+        explanation?: unknown;
+      };
+
+      if (
+        typeof maybeQuestion.question !== "string" ||
+        !Array.isArray(maybeQuestion.options) ||
+        maybeQuestion.options.length !== 4 ||
+        typeof maybeQuestion.explanation !== "string"
+      ) {
+        return null;
+      }
+
+      const options = maybeQuestion.options.map((option) =>
+        typeof option === "string" ? option.trim() : "",
+      );
+      const correctIndex = Number(maybeQuestion.correctIndex);
+
+      if (
+        options.some((option) => !option) ||
+        Number.isNaN(correctIndex) ||
+        correctIndex < 0 ||
+        correctIndex > 3
+      ) {
+        return null;
+      }
+
+      return {
+        question: maybeQuestion.question.trim(),
+        options,
+        correctIndex,
+        explanation: maybeQuestion.explanation.trim(),
+      };
+    })
+    .filter((q): q is GeneratedQuizQuestion => q !== null)
+    .slice(0, 5);
+}
+
+function extractJsonArray(text: string): unknown {
+  const fenced = text.match(/```json\s*([\s\S]*?)```/i);
+  const candidate = fenced?.[1] || text;
+
+  const start = candidate.indexOf("[");
+  const end = candidate.lastIndexOf("]");
+
+  if (start === -1 || end === -1 || end <= start) {
+    return null;
+  }
+
+  return JSON.parse(candidate.slice(start, end + 1));
+}
+
+export async function generateQuizQuestions(
+  text: string,
+): Promise<GeneratedQuizQuestion[]> {
+  const cleaned = cleanOCR(trimText(text, 7000));
+
+  const completion = await client.chat.completions.create({
+    model: "llama-3.3-70b-versatile",
+    messages: [
+      {
+        role: "system",
+        content:
+          "You are an expert educator who creates high-quality multiple-choice quizzes.",
+      },
+      {
+        role: "user",
+        content: `Create exactly 5 multiple-choice questions from the notes below.
+
+Return ONLY valid JSON as an array with this exact schema:
+[
+  {
+    "question": "string",
+    "options": ["string", "string", "string", "string"],
+    "correctIndex": 0,
+    "explanation": "string"
+  }
+]
+
+Rules:
+- Exactly 4 options per question
+- correctIndex must be 0, 1, 2, or 3
+- Questions should test understanding
+- Keep explanations concise and clear
+- Do not include markdown, prose, or extra keys
+
+Notes:
+${cleaned}`,
+      },
+    ],
+  });
+
+  const responseText = completion.choices[0].message.content || "[]";
+  let parsed: unknown = [];
+
+  try {
+    parsed = extractJsonArray(responseText);
+  } catch {
+    parsed = [];
+  }
+
+  const normalized = normalizeGeneratedQuestions(parsed);
+
+  if (normalized.length < 5) {
+    throw new Error("Model returned invalid quiz format");
+  }
+
+  return normalized;
+}
+
+export async function chatWithNotes(
+  noteContent: string,
+  message: string,
+  conversationHistory: ChatMessage[],
+) {
+  const sanitizedNote = cleanOCR(trimText(noteContent, 7000));
+  const sanitizedMessage = message.trim();
+
+  const historyMessages = conversationHistory
+    .filter((entry) => entry.content && entry.content.trim())
+    .map((entry) => ({
+      role: entry.role,
+      content: entry.content.trim(),
+    }));
+
+  const completion = await client.chat.completions.create({
+    model: "llama-3.3-70b-versatile",
+    messages: [
+      {
+        role: "system",
+        content: `You are a helpful study assistant. The student is studying the following notes: ${sanitizedNote}. Answer their questions clearly and helpfully based on these notes and your knowledge.`,
+      },
+      ...historyMessages,
+      {
+        role: "user",
+        content: sanitizedMessage,
+      },
+    ],
+  });
+
+  return completion.choices[0].message.content || "I could not generate a response.";
 }

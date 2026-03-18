@@ -1,9 +1,13 @@
 import express from "express";
 import { AuthRequest, authMiddleware } from "../middleware/auth";
+import prisma from "../prisma";
+import type { Prisma } from "../generated";
 import {
   simplifyText,
   summarizeText,
-  generateQuiz,
+  generateQuizQuestions,
+  chatWithNotes,
+  ChatMessage,
 } from "../services/aiService";
 
 const router = express.Router();
@@ -44,18 +48,91 @@ router.post("/summarize", authMiddleware, async (req: AuthRequest, res) => {
 
 router.post("/generate-quiz", authMiddleware, async (req: AuthRequest, res) => {
   try {
-    const { content } = req.body;
+    const { noteId, content } = req.body as {
+      noteId?: string;
+      content?: string;
+    };
 
-    if (!content) {
-      return res.status(400).json({ error: "Content required" });
+    if (!noteId) {
+      return res.status(400).json({ error: "noteId required" });
     }
 
-    const result = await generateQuiz(content);
+    const note = await prisma.note.findFirst({
+      where: {
+        id: noteId,
+        userId: req.user!.id,
+      },
+      select: {
+        id: true,
+        subjectId: true,
+        rawText: true,
+      },
+    });
 
-    res.json({ result });
+    if (!note) {
+      return res.status(404).json({ error: "Note not found" });
+    }
+
+    const questions = await generateQuizQuestions(content || note.rawText);
+
+    const quiz = await prisma.quiz.create({
+      data: {
+        noteId: note.id,
+        userId: req.user!.id,
+        subjectId: note.subjectId || null,
+        questions: questions as unknown as Prisma.InputJsonValue,
+      },
+    });
+
+    res.json({ result: "Quiz generated", quizId: quiz.id, questions });
   } catch (error) {
     console.error("QUIZ ERROR:", error);
     res.status(500).json({ error: "Failed to generate quiz" });
+  }
+});
+
+router.post("/chat", authMiddleware, async (req: AuthRequest, res) => {
+  try {
+    const {
+      noteId,
+      message,
+      conversationHistory,
+    }: {
+      noteId?: string;
+      message?: string;
+      conversationHistory?: ChatMessage[];
+    } = req.body;
+
+    if (!noteId || !message) {
+      return res
+        .status(400)
+        .json({ error: "noteId and message are required" });
+    }
+
+    const note = await prisma.note.findFirst({
+      where: {
+        id: noteId,
+        userId: req.user!.id,
+      },
+      select: {
+        rawText: true,
+      },
+    });
+
+    if (!note) {
+      return res.status(404).json({ error: "Note not found" });
+    }
+
+    const result = await chatWithNotes(
+      note.rawText,
+      message,
+      Array.isArray(conversationHistory) ? conversationHistory : [],
+    );
+
+    res.json({ result });
+  } catch (error) {
+    console.error("CHAT ERROR:", error);
+    res.status(500).json({ error: "Failed to generate chat response" });
   }
 });
 

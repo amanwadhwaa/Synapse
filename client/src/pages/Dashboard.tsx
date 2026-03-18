@@ -2,26 +2,48 @@ import { BookOpen, Clock, Target, TrendingUp } from "lucide-react";
 import ActivityHeatmap from "../components/ActivityHeatmap";
 import { useNavigate } from "react-router-dom";
 import { useAuthStore } from "../stores/auth";
+import { useState } from "react";
+import { apiRequest } from "../services/api";
+import StartSessionModal from "../components/StartSessionModal";
 
 function Dashboard() {
   // TODO: Replace with actual user from auth store
   const navigate = useNavigate();
   const { user } = useAuthStore();
   const firstName = user?.name?.split(" ")[0] || "there";
+  const [isStartModalOpen, setIsStartModalOpen] = useState(false);
 
   const startStudySession = () => {
-    const minutes = prompt("Enter study time in minutes");
+    setIsStartModalOpen(true);
+  };
 
-    if (!minutes || isNaN(Number(minutes)) || Number(minutes) <= 0) {
-      alert("Please enter a valid number of minutes");
-      return;
+  const handleStartSession = async (payload: {
+    subjectId: string | null;
+    durationMinutes: number;
+  }) => {
+    setIsStartModalOpen(false);
+
+    try {
+      await apiRequest("/sessions", "POST", {
+        subjectId: payload.subjectId,
+        durationMinutes: payload.durationMinutes,
+        type: "MANUAL",
+      });
+    } catch (error) {
+      console.error("Failed to log study session", error);
     }
 
-    navigate(`/study-session?time=${minutes}`);
+    navigate(`/study-session?time=${payload.durationMinutes}`);
   };
 
   return (
     <div className="px-6 pt-6">
+      <StartSessionModal
+        isOpen={isStartModalOpen}
+        onClose={() => setIsStartModalOpen(false)}
+        onStart={handleStartSession}
+      />
+
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="pt-6 mb-8">

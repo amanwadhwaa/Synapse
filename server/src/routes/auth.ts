@@ -2,6 +2,7 @@ import express from "express";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import prisma from "../prisma";
+import { authMiddleware, AuthRequest as MiddlewareAuthRequest } from "../middleware/auth";
 import { RegisterRequest, AuthRequest, LoginResponse } from "synapse-shared";
 
 const router = express.Router();
@@ -97,23 +98,18 @@ router.post("/login", async (req, res) => {
   }
 });
 
-router.get("/profile", async (req, res) => {
+router.get("/profile", authMiddleware, async (req: MiddlewareAuthRequest, res) => {
   try {
-    const authHeader = req.headers.authorization;
-
-    if (!authHeader) {
-      return res.status(401).json({ error: "No token provided" });
-    }
-
-    const token = authHeader.split(" ")[1];
-
-    const decoded: any = jwt.verify(token, JWT_SECRET);
-
     const user = await prisma.user.findUnique({
-      where: { id: decoded.id },
+      where: { id: req.user.id },
       select: {
+        id: true,
         name: true,
         email: true,
+        institution: true,
+        grade: true,
+        language: true,
+        createdAt: true,
       },
     });
 
@@ -121,6 +117,50 @@ router.get("/profile", async (req, res) => {
   } catch (error) {
     console.error("Profile error:", error);
     res.status(500).json({ error: "Failed to fetch profile" });
+  }
+});
+
+router.put("/profile", authMiddleware, async (req: MiddlewareAuthRequest, res) => {
+  try {
+    const {
+      name,
+      institution,
+      grade,
+      language,
+    }: {
+      name?: string;
+      institution?: string;
+      grade?: string;
+      language?: string;
+    } = req.body;
+
+    if (name !== undefined && !name.trim()) {
+      return res.status(400).json({ error: "Name cannot be empty" });
+    }
+
+    const updated = await prisma.user.update({
+      where: { id: req.user.id },
+      data: {
+        ...(name !== undefined ? { name: name.trim() } : {}),
+        ...(institution !== undefined ? { institution: institution.trim() || null } : {}),
+        ...(grade !== undefined ? { grade: grade.trim() || null } : {}),
+        ...(language !== undefined ? { language: language.trim().toLowerCase() } : {}),
+      },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        institution: true,
+        grade: true,
+        language: true,
+        createdAt: true,
+      },
+    });
+
+    res.json(updated);
+  } catch (error) {
+    console.error("Profile update error:", error);
+    res.status(500).json({ error: "Failed to update profile" });
   }
 });
 export { router };
