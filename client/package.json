@@ -19,6 +19,7 @@
     "@tiptap/pm": "^3.20.1",
     "@tiptap/react": "^3.20.1",
     "@tiptap/starter-kit": "^3.20.1",
+    "dayjs": "^1.11.20",
     "framer-motion": "^12.35.0",
     "lucide-react": "^0.577.0",
     "react": "^19.2.0",
