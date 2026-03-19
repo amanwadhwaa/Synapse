@@ -1,254 +1,314 @@
 import { Link } from 'react-router-dom'
-import { Brain, BookOpen, Mic, Camera, BarChart3, Timer, ArrowRight, Sparkles, Zap, Shield } from 'lucide-react'
+import { Brain, BookOpen, Mic, Camera, BarChart3, Timer, ArrowRight, Sparkles, Zap, Shield, Code2 } from 'lucide-react'
+
+const TICKER_ITEMS = [
+  { label: 'ACTIVE USERS', value: '12,847', color: 'text-white' },
+  { label: 'NOTES PROCESSED', value: '2.4M', color: 'text-violet-400' },
+  { label: 'QUIZZES GENERATED', value: '847K', color: 'text-cyan-400' },
+  { label: 'AVG SCORE BOOST', value: '+23%', color: 'text-emerald-400' },
+  { label: 'STUDY HOURS LOGGED', value: '1.8M', color: 'text-white' },
+  { label: 'AI RESPONSES', value: '5.2M', color: 'text-violet-400' },
+  { label: 'UPTIME', value: '99.99%', color: 'text-emerald-400' },
+  { label: 'LANGUAGES', value: '7+', color: 'text-cyan-400' },
+]
+
+const FEATURES = [
+  {
+    icon: Camera,
+    title: 'Multimodal Notes',
+    description: 'Upload handwritten notes, record audio explanations, or type directly. Our AI extracts and organizes your content automatically.',
+    gradient: 'from-violet-500/20 to-purple-600/20',
+    iconBg: 'bg-violet-500/20',
+    iconColor: 'text-violet-400',
+  },
+  {
+    icon: Brain,
+    title: 'AI Concept Engine',
+    description: 'Get instant explanations, summaries, and custom quizzes generated from your notes using Google Gemini AI.',
+    gradient: 'from-cyan-500/20 to-blue-600/20',
+    iconBg: 'bg-cyan-500/20',
+    iconColor: 'text-cyan-400',
+  },
+  {
+    icon: BookOpen,
+    title: 'Adaptive Planning',
+    description: 'Personalized study schedules that adapt based on your performance and exam dates. Never cram again.',
+    gradient: 'from-emerald-500/20 to-teal-600/20',
+    iconBg: 'bg-emerald-500/20',
+    iconColor: 'text-emerald-400',
+  },
+  {
+    icon: Timer,
+    title: 'Pomodoro Timer',
+    description: 'Built-in focus timer with session tracking and productivity analytics. Stay focused and motivated.',
+    gradient: 'from-violet-500/20 to-fuchsia-600/20',
+    iconBg: 'bg-violet-500/20',
+    iconColor: 'text-violet-300',
+  },
+  {
+    icon: BarChart3,
+    title: 'Performance Dashboard',
+    description: 'Track your progress with detailed analytics, weak area identification, and study time insights.',
+    gradient: 'from-cyan-500/20 to-indigo-600/20',
+    iconBg: 'bg-cyan-500/20',
+    iconColor: 'text-cyan-300',
+  },
+  {
+    icon: Mic,
+    title: 'Multilingual Support',
+    description: 'Learn in your preferred language with Azure-powered translation and text-to-speech capabilities.',
+    gradient: 'from-violet-500/20 to-pink-600/20',
+    iconBg: 'bg-violet-500/20',
+    iconColor: 'text-violet-300',
+  },
+]
 
 function Landing() {
   return (
-    <div className="min-h-screen bg-[var(--color-background)] relative overflow-hidden">
-      {/* Background Effects */}
-      <div className="absolute inset-0 bg-gradient-to-br from-blue-900/20 via-transparent to-purple-900/20"></div>
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl"></div>
-      <div className="absolute bottom-0 right-0 w-96 h-96 bg-purple-500/10 rounded-full blur-3xl"></div>
+    <div className="min-h-screen bg-[#030303] relative overflow-hidden">
+      {/* ── Floating Orbs ────────────────────────────── */}
+      <div className="orb orb-violet w-[500px] h-[500px] -top-32 left-1/2 -translate-x-1/2 opacity-40" style={{ animationDuration: '10s' }}></div>
+      <div className="orb orb-cyan w-[400px] h-[400px] top-1/4 -left-20 opacity-20" style={{ animationDuration: '14s', animationDelay: '-3s' }}></div>
+      <div className="orb orb-violet w-[350px] h-[350px] bottom-1/4 -right-20 opacity-20" style={{ animationDuration: '12s', animationDelay: '-5s' }}></div>
 
-      {/* Header */}
-      <header className="relative z-10 px-6 py-6">
-        <div className="max-w-7xl mx-auto flex justify-between items-center">
-          <div className="flex items-center space-x-3">
-            <div className="relative">
-              <Brain className="h-10 w-10 text-[var(--color-primary)]" />
-              <div className="absolute -top-1 -right-1 w-3 h-3 bg-[var(--color-primary)] rounded-full animate-pulse"></div>
-            </div>
-            <span className="text-3xl font-bold bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent">
-              SYNAPSE
-            </span>
+      {/* ── Fixed Navigation Pill ─────────────────────── */}
+      <header className="fixed top-6 left-1/2 -translate-x-1/2 z-50 w-[95%] max-w-[672px]">
+        <nav className="glass rounded-full px-5 py-3 flex items-center justify-between">
+          <Link to="/" className="flex items-center space-x-2.5">
+            <div className="w-4 h-4 rounded-full bg-gradient-to-br from-violet-500 to-cyan-400"></div>
+            <span className="font-serif text-lg text-white tracking-tight">Synapse</span>
+          </Link>
+
+          <div className="hidden sm:flex items-center space-x-6">
+            <a href="#features" className="text-xs uppercase tracking-widest text-neutral-400 hover:text-white transition-colors">Features</a>
+            <a href="#code" className="text-xs uppercase tracking-widest text-neutral-400 hover:text-white transition-colors">Integrate</a>
           </div>
-          <div className="flex items-center space-x-4">
-            <Link
-              to="/login"
-              className="text-gray-300 hover:text-white transition-all duration-200 px-4 py-2 rounded-lg hover:bg-white/5"
-            >
-              Sign In
-            </Link>
-            <Link
-              to="/register"
-              className="bg-[var(--color-primary)] hover:bg-blue-600 text-white px-6 py-2.5 rounded-lg font-medium transition-all duration-200 shadow-lg shadow-blue-500/25 hover:shadow-blue-500/40 transform hover:scale-105"
-            >
-              Get Started
-            </Link>
-          </div>
-        </div>
+
+          <Link
+            to="/register"
+            className="bg-white text-black px-5 py-1.5 rounded-full text-sm font-semibold hover:bg-neutral-200 transition-colors"
+          >
+            Get Started
+          </Link>
+        </nav>
       </header>
 
-      {/* Hero Section */}
-      <section className="relative px-6 py-20">
-        <div className="max-w-7xl mx-auto text-center">
-          <div className="mb-8">
-            <div className="inline-flex items-center px-4 py-2 rounded-full bg-white/5 border border-white/10 backdrop-blur-sm mb-6">
-              <Sparkles className="h-4 w-4 text-[var(--color-primary)] mr-2" />
-              <span className="text-sm text-gray-300">The Future of Learning</span>
+      {/* ── Hero Section ─────────────────────────────── */}
+      <section className="relative px-6 pt-36 pb-16">
+        <div className="max-w-5xl mx-auto text-center">
+          <div className="stagger-in mb-8" style={{ animationDelay: '0.1s' }}>
+            <div className="inline-flex items-center px-4 py-2 rounded-full glass mb-8">
+              <Sparkles className="h-4 w-4 text-violet-400 mr-2" />
+              <span className="text-xs uppercase tracking-widest text-neutral-400">The Future of Learning</span>
             </div>
-            <h1 className="text-6xl md:text-8xl font-bold mb-6 leading-tight">
-              <span className="bg-gradient-to-r from-white via-blue-100 to-blue-200 bg-clip-text text-transparent">
-                Cognitive
-              </span>
+
+            <h1 className="font-serif text-6xl sm:text-7xl md:text-8xl lg:text-9xl leading-[0.9] tracking-tightest mb-8">
+              <span className="text-white">Cognitive</span>
               <br />
-              <span className="bg-gradient-to-r from-[var(--color-primary)] via-blue-400 to-purple-400 bg-clip-text text-transparent">
-                Operating System
-              </span>
+              <span className="text-white">Operating </span>
+              <span className="text-shimmer">System</span>
             </h1>
-            <p className="text-xl md:text-2xl text-gray-400 mb-12 max-w-4xl mx-auto leading-relaxed">
+
+            <p className="max-w-2xl mx-auto text-lg text-neutral-400 leading-relaxed font-light">
               Transform your learning with AI-powered note ingestion, adaptive study planning,
               and intelligent quiz generation. Study smarter, not harder.
             </p>
           </div>
 
-          <div className="flex flex-col sm:flex-row gap-6 justify-center items-center mb-16">
-            <Link
-              to="/register"
-              className="group bg-[var(--color-primary)] hover:bg-blue-600 text-white px-8 py-4 rounded-xl text-lg font-semibold transition-all duration-200 shadow-2xl shadow-blue-500/25 hover:shadow-blue-500/40 transform hover:scale-105 flex items-center justify-center min-w-[200px]"
-            >
-              Start Learning Today
-              <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
+          <div className="stagger-in flex flex-col sm:flex-row gap-5 justify-center items-center mb-16" style={{ animationDelay: '0.5s' }}>
+            <Link to="/register" className="shiny-border-btn">
+              <span className="px-10 py-4 text-white font-semibold text-base inline-flex items-center">
+                Start Learning Today
+                <ArrowRight className="ml-2 h-5 w-5" />
+              </span>
             </Link>
-            <button className="group border border-white/20 hover:border-white/30 text-white px-8 py-4 rounded-xl text-lg font-medium transition-all duration-200 backdrop-blur-sm bg-white/5 hover:bg-white/10 flex items-center justify-center min-w-[200px]">
-              <Zap className="mr-2 h-5 w-5" />
+            <button className="group flex items-center text-neutral-400 hover:text-white transition-colors text-sm">
+              <Zap className="mr-2 h-4 w-4" />
               Watch Demo
             </button>
           </div>
 
           {/* Trust indicators */}
-          <div className="flex flex-col sm:flex-row items-center justify-center space-y-4 sm:space-y-0 sm:space-x-8 text-gray-400">
+          <div className="stagger-in flex flex-col sm:flex-row items-center justify-center space-y-3 sm:space-y-0 sm:space-x-8 text-neutral-500 text-sm" style={{ animationDelay: '0.8s' }}>
             <div className="flex items-center space-x-2">
-              <Shield className="h-5 w-5 text-green-400" />
+              <Shield className="h-4 w-4 text-emerald-400" />
               <span>Enterprise Security</span>
             </div>
             <div className="flex items-center space-x-2">
-              <Brain className="h-5 w-5 text-[var(--color-primary)]" />
+              <Brain className="h-4 w-4 text-violet-400" />
               <span>AI-Powered</span>
             </div>
             <div className="flex items-center space-x-2">
-              <Timer className="h-5 w-5 text-purple-400" />
+              <Timer className="h-4 w-4 text-cyan-400" />
               <span>24/7 Support</span>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Features Section */}
-      <section className="relative px-6 py-20">
+      {/* ── Metrics Ticker ───────────────────────────── */}
+      <section className="relative border-y border-white/5 bg-black/40 overflow-hidden py-4">
+        <div className="ticker-track">
+          {[...TICKER_ITEMS, ...TICKER_ITEMS].map((item, i) => (
+            <div key={i} className="flex items-center mx-8 shrink-0">
+              <div className="mr-3">
+                <span className="text-[10px] font-mono uppercase tracking-[0.2em] text-neutral-500 block">{item.label}</span>
+              </div>
+              <span className={`text-base font-mono font-semibold ${item.color}`}>{item.value}</span>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* ── Features Grid ────────────────────────────── */}
+      <section id="features" className="relative px-6 py-24">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-16">
-            <h2 className="text-4xl md:text-5xl font-bold text-white mb-6">
+            <h2 className="font-serif text-4xl md:text-5xl lg:text-6xl text-white mb-6 tracking-tight">
               Everything you need to
-              <span className="block bg-gradient-to-r from-[var(--color-primary)] to-purple-400 bg-clip-text text-transparent">
-                excel in your studies
-              </span>
+              <span className="block text-shimmer">excel in your studies</span>
             </h2>
-            <p className="text-xl text-gray-400 max-w-2xl mx-auto">
+            <p className="text-lg text-neutral-400 max-w-2xl mx-auto font-light">
               Powerful features designed by students, for students
             </p>
           </div>
 
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-            <div className="group relative">
-              <div className="absolute -inset-0.5 bg-gradient-to-r from-[var(--color-primary)] to-purple-600 rounded-2xl blur opacity-20 group-hover:opacity-40 transition duration-1000"></div>
-              <div className="relative bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-8 hover:bg-white/10 transition-all duration-300">
-                <div className="flex items-center mb-6">
-                  <div className="p-3 bg-[var(--color-primary)]/20 rounded-xl mr-4">
-                    <Camera className="h-8 w-8 text-[var(--color-primary)]" />
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {FEATURES.map((feature, index) => {
+              const Icon = feature.icon
+              return (
+                <div
+                  key={feature.title}
+                  className="group glass-card rounded-3xl p-10 hover:-translate-y-3 transition-all duration-500 hover:border-violet-500/40 hover:bg-white/[0.04] hover:shadow-[0_0_30px_-10px_rgba(139,92,246,0.3)]"
+                  style={{ animationDelay: `${index * 0.1}s` }}
+                >
+                  <div className={`w-12 h-12 ${feature.iconBg} rounded-xl flex items-center justify-center mb-6 group-hover:scale-110 group-hover:rotate-3 transition-transform duration-500`}>
+                    <Icon className={`h-6 w-6 ${feature.iconColor}`} />
                   </div>
-                  <h3 className="text-xl font-semibold text-white">Multimodal Notes</h3>
+                  <h3 className="font-serif text-xl text-white mb-3">{feature.title}</h3>
+                  <p className="text-neutral-400 leading-relaxed text-sm font-light">{feature.description}</p>
                 </div>
-                <p className="text-gray-400 leading-relaxed">
-                  Upload handwritten notes, record audio explanations, or type directly.
-                  Our AI extracts and organizes your content automatically.
-                </p>
+              )
+            })}
+          </div>
+        </div>
+      </section>
+
+      {/* ── Code Integration Block ───────────────────── */}
+      <section id="code" className="relative px-6 py-24">
+        <div className="max-w-4xl mx-auto">
+          <div className="text-center mb-12">
+            <h2 className="font-serif text-4xl md:text-5xl text-white mb-4 tracking-tight">
+              Integrate in <span className="text-shimmer">seconds</span>
+            </h2>
+            <p className="text-neutral-400 text-lg font-light">Start building with SYNAPSE right away</p>
+          </div>
+
+          <div className="glass rounded-3xl overflow-hidden">
+            {/* IDE Toolbar */}
+            <div className="flex items-center justify-between px-5 py-3 border-b border-white/10">
+              <div className="flex items-center space-x-2">
+                <div className="w-3 h-3 rounded-full bg-red-500/40"></div>
+                <div className="w-3 h-3 rounded-full bg-yellow-500/40"></div>
+                <div className="w-3 h-3 rounded-full bg-green-500/40"></div>
               </div>
+              <span className="font-mono text-xs text-neutral-500">synapse.config.ts</span>
+              <Code2 className="h-4 w-4 text-neutral-600" />
             </div>
 
-            <div className="group relative">
-              <div className="absolute -inset-0.5 bg-gradient-to-r from-purple-500 to-pink-600 rounded-2xl blur opacity-20 group-hover:opacity-40 transition duration-1000"></div>
-              <div className="relative bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-8 hover:bg-white/10 transition-all duration-300">
-                <div className="flex items-center mb-6">
-                  <div className="p-3 bg-purple-500/20 rounded-xl mr-4">
-                    <Brain className="h-8 w-8 text-purple-400" />
-                  </div>
-                  <h3 className="text-xl font-semibold text-white">AI Concept Engine</h3>
-                </div>
-                <p className="text-gray-400 leading-relaxed">
-                  Get instant explanations, summaries, and custom quizzes generated
-                  from your notes using Google Gemini AI.
-                </p>
-              </div>
-            </div>
-
-            <div className="group relative">
-              <div className="absolute -inset-0.5 bg-gradient-to-r from-green-500 to-teal-600 rounded-2xl blur opacity-20 group-hover:opacity-40 transition duration-1000"></div>
-              <div className="relative bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-8 hover:bg-white/10 transition-all duration-300">
-                <div className="flex items-center mb-6">
-                  <div className="p-3 bg-green-500/20 rounded-xl mr-4">
-                    <BookOpen className="h-8 w-8 text-green-400" />
-                  </div>
-                  <h3 className="text-xl font-semibold text-white">Adaptive Planning</h3>
-                </div>
-                <p className="text-gray-400 leading-relaxed">
-                  Personalized study schedules that adapt based on your performance
-                  and exam dates. Never cram again.
-                </p>
-              </div>
-            </div>
-
-            <div className="group relative">
-              <div className="absolute -inset-0.5 bg-gradient-to-r from-orange-500 to-red-600 rounded-2xl blur opacity-20 group-hover:opacity-40 transition duration-1000"></div>
-              <div className="relative bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-8 hover:bg-white/10 transition-all duration-300">
-                <div className="flex items-center mb-6">
-                  <div className="p-3 bg-orange-500/20 rounded-xl mr-4">
-                    <Timer className="h-8 w-8 text-orange-400" />
-                  </div>
-                  <h3 className="text-xl font-semibold text-white">Pomodoro Timer</h3>
-                </div>
-                <p className="text-gray-400 leading-relaxed">
-                  Built-in focus timer with session tracking and productivity analytics.
-                  Stay focused and motivated.
-                </p>
-              </div>
-            </div>
-
-            <div className="group relative">
-              <div className="absolute -inset-0.5 bg-gradient-to-r from-cyan-500 to-blue-600 rounded-2xl blur opacity-20 group-hover:opacity-40 transition duration-1000"></div>
-              <div className="relative bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-8 hover:bg-white/10 transition-all duration-300">
-                <div className="flex items-center mb-6">
-                  <div className="p-3 bg-cyan-500/20 rounded-xl mr-4">
-                    <BarChart3 className="h-8 w-8 text-cyan-400" />
-                  </div>
-                  <h3 className="text-xl font-semibold text-white">Performance Dashboard</h3>
-                </div>
-                <p className="text-gray-400 leading-relaxed">
-                  Track your progress with detailed analytics, weak area identification,
-                  and study time insights.
-                </p>
-              </div>
-            </div>
-
-            <div className="group relative">
-              <div className="absolute -inset-0.5 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-2xl blur opacity-20 group-hover:opacity-40 transition duration-1000"></div>
-              <div className="relative bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-8 hover:bg-white/10 transition-all duration-300">
-                <div className="flex items-center mb-6">
-                  <div className="p-3 bg-indigo-500/20 rounded-xl mr-4">
-                    <Mic className="h-8 w-8 text-indigo-400" />
-                  </div>
-                  <h3 className="text-xl font-semibold text-white">Multilingual Support</h3>
-                </div>
-                <p className="text-gray-400 leading-relaxed">
-                  Learn in your preferred language with Azure-powered translation
-                  and text-to-speech capabilities.
-                </p>
-              </div>
+            {/* Code Content */}
+            <div className="p-6 font-mono text-sm leading-7">
+              <div><span className="text-violet-400">import</span> <span className="text-white">{'{'} Synapse {'}'}</span> <span className="text-violet-400">from</span> <span className="text-emerald-400">'@synapse/core'</span></div>
+              <div className="text-neutral-600">{'// Initialize the cognitive engine'}</div>
+              <div className="mt-2"><span className="text-violet-400">const</span> <span className="text-cyan-400">engine</span> <span className="text-white">= </span><span className="text-violet-400">new</span> <span className="text-cyan-400">Synapse</span><span className="text-white">({'{'}</span></div>
+              <div className="pl-6"><span className="text-white">model: </span><span className="text-emerald-400">'gemini-pro'</span><span className="text-white">,</span></div>
+              <div className="pl-6"><span className="text-white">features: [</span><span className="text-emerald-400">'notes'</span><span className="text-white">, </span><span className="text-emerald-400">'quizzes'</span><span className="text-white">, </span><span className="text-emerald-400">'planner'</span><span className="text-white">],</span></div>
+              <div className="pl-6"><span className="text-white">language: </span><span className="text-emerald-400">'multi'</span></div>
+              <div><span className="text-white">{'}'})</span></div>
+              <div className="mt-2"><span className="text-violet-400">await</span> <span className="text-cyan-400">engine</span><span className="text-white">.start()</span></div>
             </div>
           </div>
         </div>
       </section>
 
-      {/* CTA Section */}
+      {/* ── CTA Section ──────────────────────────────── */}
       <section className="relative px-6 py-20">
         <div className="max-w-4xl mx-auto text-center">
-          <div className="bg-gradient-to-r from-[var(--color-primary)]/10 via-purple-500/10 to-pink-500/10 rounded-3xl p-12 backdrop-blur-xl border border-white/10">
-            <h2 className="text-4xl md:text-5xl font-bold text-white mb-6">
-              Ready to transform your learning?
-            </h2>
-            <p className="text-xl text-gray-400 mb-8 max-w-2xl mx-auto">
-              Join thousands of students who are already studying smarter with SYNAPSE.
-              Start your free trial today.
-            </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Link
-                to="/register"
-                className="bg-[var(--color-primary)] hover:bg-blue-600 text-white px-8 py-4 rounded-xl text-lg font-semibold transition-all duration-200 shadow-2xl shadow-blue-500/25 hover:shadow-blue-500/40 transform hover:scale-105 inline-flex items-center justify-center"
-              >
-                Start Your Free Trial
-                <ArrowRight className="ml-2 h-5 w-5" />
-              </Link>
-              <span className="text-gray-400 text-sm self-center">No credit card required</span>
+          <div className="glass rounded-3xl p-12 relative overflow-hidden">
+            <div className="orb orb-violet w-48 h-48 -top-12 -left-12 opacity-30" style={{ animationDuration: '6s' }}></div>
+            <div className="orb orb-cyan w-32 h-32 -bottom-8 -right-8 opacity-25" style={{ animationDuration: '8s' }}></div>
+
+            <div className="relative z-10">
+              <h2 className="font-serif text-4xl md:text-5xl text-white mb-6 tracking-tight">
+                Ready to transform your learning?
+              </h2>
+              <p className="text-lg text-neutral-400 mb-8 max-w-2xl mx-auto font-light">
+                Join thousands of students who are already studying smarter with SYNAPSE.
+                Start your free trial today.
+              </p>
+              <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+                <Link to="/register" className="shiny-border-btn">
+                  <span className="px-8 py-3.5 text-white font-semibold inline-flex items-center">
+                    Start Your Free Trial
+                    <ArrowRight className="ml-2 h-5 w-5" />
+                  </span>
+                </Link>
+                <span className="text-neutral-500 text-sm">No credit card required</span>
+              </div>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Footer */}
-      <footer className="relative px-6 py-12 border-t border-white/10">
-        <div className="max-w-7xl mx-auto text-center">
-          <div className="flex items-center justify-center space-x-3 mb-6">
-            <Brain className="h-8 w-8 text-[var(--color-primary)]" />
-            <span className="text-2xl font-bold bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent">
-              SYNAPSE
-            </span>
+      {/* ── Footer ───────────────────────────────────── */}
+      <footer className="bg-[#050505] border-t border-white/5 px-6 py-16">
+        <div className="max-w-7xl mx-auto">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mb-12">
+            {/* Brand */}
+            <div className="col-span-2 md:col-span-1">
+              <div className="flex items-center space-x-2.5 mb-4">
+                <div className="w-4 h-4 rounded-full bg-gradient-to-br from-violet-500 to-cyan-400"></div>
+                <span className="font-serif text-2xl text-white">Synapse</span>
+              </div>
+              <p className="text-neutral-500 text-sm font-light leading-relaxed">The Cognitive Operating System for Students.</p>
+            </div>
+
+            {/* Links */}
+            <div>
+              <h4 className="text-[10px] font-sans uppercase tracking-[0.2em] text-neutral-500 mb-4">Product</h4>
+              <ul className="space-y-2.5 text-sm text-neutral-400">
+                <li><a href="#features" className="hover:text-white transition-colors">Features</a></li>
+                <li><a href="#" className="hover:text-white transition-colors">Pricing</a></li>
+                <li><a href="#" className="hover:text-white transition-colors">Changelog</a></li>
+              </ul>
+            </div>
+
+            <div>
+              <h4 className="text-[10px] font-sans uppercase tracking-[0.2em] text-neutral-500 mb-4">Resources</h4>
+              <ul className="space-y-2.5 text-sm text-neutral-400">
+                <li><a href="#" className="hover:text-white transition-colors">Documentation</a></li>
+                <li><a href="#" className="hover:text-white transition-colors">API Reference</a></li>
+                <li><a href="#" className="hover:text-white transition-colors">Blog</a></li>
+              </ul>
+            </div>
+
+            <div>
+              <h4 className="text-[10px] font-sans uppercase tracking-[0.2em] text-neutral-500 mb-4">Company</h4>
+              <ul className="space-y-2.5 text-sm text-neutral-400">
+                <li><a href="#" className="hover:text-white transition-colors">About</a></li>
+                <li><a href="#" className="hover:text-white transition-colors">Privacy</a></li>
+                <li><a href="#" className="hover:text-white transition-colors">Terms</a></li>
+              </ul>
+            </div>
           </div>
-          <p className="text-gray-500 mb-4">
-            © 2026 SYNAPSE. The Cognitive Operating System for Students.
-          </p>
-          <div className="flex justify-center space-x-6 text-sm text-gray-500">
-            <a href="#" className="hover:text-white transition-colors">Privacy</a>
-            <a href="#" className="hover:text-white transition-colors">Terms</a>
-            <a href="#" className="hover:text-white transition-colors">Support</a>
+
+          {/* Bottom bar */}
+          <div className="border-t border-white/5 pt-6 flex flex-col sm:flex-row justify-between items-center text-xs text-neutral-500">
+            <span>© 2026 SYNAPSE. All rights reserved.</span>
+            <div className="flex items-center space-x-2 mt-2 sm:mt-0">
+              <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></div>
+              <span className="text-emerald-400">All Systems Operational</span>
+            </div>
           </div>
         </div>
       </footer>

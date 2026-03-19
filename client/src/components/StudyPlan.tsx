@@ -12,7 +12,7 @@ export default function StudyPlan({ plan }: StudyPlanProps) {
 
   return (
     <div className="mt-8">
-      <h2 className="text-2xl font-semibold text-white mb-6">
+      <h2 className="font-serif text-2xl text-white mb-6">
         Your Study Plan
       </h2>
 
@@ -20,9 +20,9 @@ export default function StudyPlan({ plan }: StudyPlanProps) {
         {plan.map((day, index) => (
           <div
             key={index}
-            className="bg-white/5 backdrop-blur-lg border border-white/10 rounded-xl p-5"
+            className="glass-card rounded-2xl p-5 hover:border-violet-500/30 transition-all duration-500 hover:shadow-[0_0_20px_-10px_rgba(139,92,246,0.2)]"
           >
-            <h3 className="text-lg font-semibold text-blue-400 mb-3">
+            <h3 className="font-serif text-lg text-violet-300 mb-3">
               {day.date}
             </h3>
 
@@ -30,7 +30,7 @@ export default function StudyPlan({ plan }: StudyPlanProps) {
               {day.subjects.map((subject, i) => (
                 <li
                   key={i}
-                  className="bg-white/10 px-3 py-2 rounded-lg text-gray-200"
+                  className="bg-white/[0.03] border border-white/5 px-3 py-2 rounded-xl text-neutral-200 text-sm"
                 >
                   {subject}
                 </li>

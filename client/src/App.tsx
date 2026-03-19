@@ -45,25 +45,25 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[var(--color-background)] relative overflow-hidden px-6 py-10 flex items-center justify-center">
-      <div className="absolute inset-0 bg-gradient-to-br from-blue-900/20 via-transparent to-purple-900/20"></div>
-      <div className="absolute -top-24 -left-12 w-80 h-80 bg-blue-500/12 rounded-full blur-3xl"></div>
-      <div className="absolute top-1/3 right-0 w-72 h-72 bg-cyan-500/10 rounded-full blur-3xl"></div>
-      <div className="absolute -bottom-24 left-1/2 -translate-x-1/2 w-96 h-96 bg-purple-500/10 rounded-full blur-3xl"></div>
+    <div className="min-h-screen bg-[#030303] relative overflow-hidden px-6 py-10 flex items-center justify-center">
+      {/* Floating orbs */}
+      <div className="orb orb-violet w-[400px] h-[400px] -top-24 -left-12 opacity-30" style={{ animationDuration: '10s' }}></div>
+      <div className="orb orb-cyan w-[300px] h-[300px] top-1/3 right-0 opacity-20" style={{ animationDuration: '12s', animationDelay: '-3s' }}></div>
+      <div className="orb orb-violet w-[350px] h-[350px] -bottom-24 left-1/2 -translate-x-1/2 opacity-15" style={{ animationDuration: '14s', animationDelay: '-5s' }}></div>
 
-      <div className="relative w-full max-w-md bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-8 shadow-2xl shadow-blue-900/20">
+      <div className="relative w-full max-w-md glass rounded-2xl p-8 shadow-2xl shadow-violet-900/20">
         <div className="flex flex-col items-center text-center mb-7">
           <div className="relative mb-3">
-            <Brain className="h-10 w-10 text-[var(--color-primary)]" />
-            <div className="absolute -top-1 -right-1 h-3 w-3 rounded-full bg-[var(--color-primary)] animate-pulse"></div>
+            <Brain className="h-10 w-10 text-violet-400" />
+            <div className="absolute -top-1 -right-1 h-3 w-3 rounded-full bg-violet-500 animate-pulse"></div>
           </div>
-          <span className="text-2xl font-bold tracking-wide bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent">
+          <span className="font-serif text-2xl tracking-wide bg-gradient-to-r from-white to-neutral-300 bg-clip-text text-transparent">
             SYNAPSE
           </span>
-          <h2 className="mt-3 text-3xl font-extrabold bg-gradient-to-r from-blue-300 via-white to-cyan-300 bg-clip-text text-transparent">
+          <h2 className="mt-3 text-3xl font-bold bg-gradient-to-r from-violet-300 via-white to-cyan-300 bg-clip-text text-transparent">
             Welcome Back
           </h2>
-          <p className="mt-2 text-sm text-gray-300">Sign in to continue your learning journey.</p>
+          <p className="mt-2 text-sm text-neutral-400">Sign in to continue your learning journey.</p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -72,7 +72,7 @@ const Login = () => {
             placeholder="Email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="w-full rounded-xl border border-white/10 bg-slate-900/70 px-4 py-3 text-white placeholder:text-white/50 focus:border-blue-400/70 focus:outline-none focus:ring-2 focus:ring-blue-500/40 transition"
+            className="w-full rounded-xl border border-white/10 bg-[#0a0a0a] px-4 py-3 text-white placeholder:text-white/40 focus:border-violet-500/50 focus:outline-none focus:ring-2 focus:ring-violet-500/30 transition"
             required
           />
           <input
@@ -80,22 +80,22 @@ const Login = () => {
             placeholder="Password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className="w-full rounded-xl border border-white/10 bg-slate-900/70 px-4 py-3 text-white placeholder:text-white/50 focus:border-blue-400/70 focus:outline-none focus:ring-2 focus:ring-blue-500/40 transition"
+            className="w-full rounded-xl border border-white/10 bg-[#0a0a0a] px-4 py-3 text-white placeholder:text-white/40 focus:border-violet-500/50 focus:outline-none focus:ring-2 focus:ring-violet-500/30 transition"
             required
           />
           <button
             type="submit"
-            className="group w-full rounded-xl bg-gradient-to-r from-blue-600 to-cyan-500 text-white py-3 font-semibold shadow-lg shadow-blue-500/30 transition-all duration-200 hover:from-blue-500 hover:to-cyan-400 hover:shadow-blue-500/45 hover:scale-[1.01]"
+            className="group w-full rounded-xl bg-gradient-to-r from-violet-600 to-cyan-500 text-white py-3 font-semibold shadow-lg shadow-violet-500/25 transition-all duration-300 hover:from-violet-500 hover:to-cyan-400 hover:shadow-violet-500/40 hover:scale-[1.01]"
           >
             Sign In
           </button>
         </form>
 
-        <p className="mt-6 text-center text-sm text-gray-300">
+        <p className="mt-6 text-center text-sm text-neutral-400">
           New to SYNAPSE?{" "}
           <Link
             to="/register"
-            className="font-semibold text-blue-300 hover:text-blue-200 transition-colors"
+            className="font-semibold text-violet-400 hover:text-violet-300 transition-colors"
           >
             Create Account
           </Link>
@@ -126,25 +126,25 @@ const Register = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[var(--color-background)] relative overflow-hidden px-6 py-10 flex items-center justify-center">
-      <div className="absolute inset-0 bg-gradient-to-br from-blue-900/20 via-transparent to-purple-900/20"></div>
-      <div className="absolute -top-24 -left-12 w-80 h-80 bg-blue-500/12 rounded-full blur-3xl"></div>
-      <div className="absolute top-1/3 right-0 w-72 h-72 bg-cyan-500/10 rounded-full blur-3xl"></div>
-      <div className="absolute -bottom-24 left-1/2 -translate-x-1/2 w-96 h-96 bg-purple-500/10 rounded-full blur-3xl"></div>
+    <div className="min-h-screen bg-[#030303] relative overflow-hidden px-6 py-10 flex items-center justify-center">
+      {/* Floating orbs */}
+      <div className="orb orb-violet w-[400px] h-[400px] -top-24 -left-12 opacity-30" style={{ animationDuration: '10s' }}></div>
+      <div className="orb orb-cyan w-[300px] h-[300px] top-1/3 right-0 opacity-20" style={{ animationDuration: '12s', animationDelay: '-3s' }}></div>
+      <div className="orb orb-violet w-[350px] h-[350px] -bottom-24 left-1/2 -translate-x-1/2 opacity-15" style={{ animationDuration: '14s', animationDelay: '-5s' }}></div>
 
-      <div className="relative w-full max-w-md bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-8 shadow-2xl shadow-blue-900/20">
+      <div className="relative w-full max-w-md glass rounded-2xl p-8 shadow-2xl shadow-violet-900/20">
         <div className="flex flex-col items-center text-center mb-7">
           <div className="relative mb-3">
-            <Brain className="h-10 w-10 text-[var(--color-primary)]" />
-            <div className="absolute -top-1 -right-1 h-3 w-3 rounded-full bg-[var(--color-primary)] animate-pulse"></div>
+            <Brain className="h-10 w-10 text-violet-400" />
+            <div className="absolute -top-1 -right-1 h-3 w-3 rounded-full bg-violet-500 animate-pulse"></div>
           </div>
-          <span className="text-2xl font-bold tracking-wide bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent">
+          <span className="font-serif text-2xl tracking-wide bg-gradient-to-r from-white to-neutral-300 bg-clip-text text-transparent">
             SYNAPSE
           </span>
-          <h2 className="mt-3 text-3xl font-extrabold bg-gradient-to-r from-blue-300 via-white to-cyan-300 bg-clip-text text-transparent">
+          <h2 className="mt-3 text-3xl font-bold bg-gradient-to-r from-violet-300 via-white to-cyan-300 bg-clip-text text-transparent">
             Join SYNAPSE
           </h2>
-          <p className="mt-2 text-sm text-gray-300">Create your account and start learning smarter.</p>
+          <p className="mt-2 text-sm text-neutral-400">Create your account and start learning smarter.</p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -153,7 +153,7 @@ const Register = () => {
             placeholder="Full Name"
             value={name}
             onChange={(e) => setName(e.target.value)}
-            className="w-full rounded-xl border border-white/10 bg-slate-900/70 px-4 py-3 text-white placeholder:text-white/50 focus:border-blue-400/70 focus:outline-none focus:ring-2 focus:ring-blue-500/40 transition"
+            className="w-full rounded-xl border border-white/10 bg-[#0a0a0a] px-4 py-3 text-white placeholder:text-white/40 focus:border-violet-500/50 focus:outline-none focus:ring-2 focus:ring-violet-500/30 transition"
             required
           />
           <input
@@ -161,7 +161,7 @@ const Register = () => {
             placeholder="Email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="w-full rounded-xl border border-white/10 bg-slate-900/70 px-4 py-3 text-white placeholder:text-white/50 focus:border-blue-400/70 focus:outline-none focus:ring-2 focus:ring-blue-500/40 transition"
+            className="w-full rounded-xl border border-white/10 bg-[#0a0a0a] px-4 py-3 text-white placeholder:text-white/40 focus:border-violet-500/50 focus:outline-none focus:ring-2 focus:ring-violet-500/30 transition"
             required
           />
           <input
@@ -169,22 +169,22 @@ const Register = () => {
             placeholder="Password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className="w-full rounded-xl border border-white/10 bg-slate-900/70 px-4 py-3 text-white placeholder:text-white/50 focus:border-blue-400/70 focus:outline-none focus:ring-2 focus:ring-blue-500/40 transition"
+            className="w-full rounded-xl border border-white/10 bg-[#0a0a0a] px-4 py-3 text-white placeholder:text-white/40 focus:border-violet-500/50 focus:outline-none focus:ring-2 focus:ring-violet-500/30 transition"
             required
           />
           <button
             type="submit"
-            className="group w-full rounded-xl bg-gradient-to-r from-blue-600 to-cyan-500 text-white py-3 font-semibold shadow-lg shadow-blue-500/30 transition-all duration-200 hover:from-blue-500 hover:to-cyan-400 hover:shadow-blue-500/45 hover:scale-[1.01]"
+            className="group w-full rounded-xl bg-gradient-to-r from-violet-600 to-cyan-500 text-white py-3 font-semibold shadow-lg shadow-violet-500/25 transition-all duration-300 hover:from-violet-500 hover:to-cyan-400 hover:shadow-violet-500/40 hover:scale-[1.01]"
           >
             Create Account
           </button>
         </form>
 
-        <p className="mt-6 text-center text-sm text-gray-300">
+        <p className="mt-6 text-center text-sm text-neutral-400">
           Already have an account?{" "}
           <Link
             to="/login"
-            className="font-semibold text-blue-300 hover:text-blue-200 transition-colors"
+            className="font-semibold text-violet-400 hover:text-violet-300 transition-colors"
           >
             Sign In
           </Link>

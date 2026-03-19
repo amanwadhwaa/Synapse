@@ -24,7 +24,7 @@ export default function GeneratePlan({ setPlan }: GeneratePlanProps) {
 
   return (
     <button
-      className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg mt-3"
+      className="bg-gradient-to-r from-violet-600 to-cyan-500 text-white px-6 py-2.5 rounded-xl font-semibold shadow-lg shadow-violet-500/20 hover:shadow-violet-500/35 transition-all duration-300 hover:scale-[1.02]"
       onClick={generatePlan}
     >
       Generate Study Plan

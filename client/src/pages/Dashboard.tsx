@@ -36,8 +36,15 @@ function Dashboard() {
     navigate(`/study-session?time=${payload.durationMinutes}`);
   };
 
+  const stats = [
+    { label: 'Notes Created', value: '24', icon: BookOpen, gradient: 'from-violet-500/20 to-purple-600/20', iconBg: 'bg-violet-500/20', iconColor: 'text-violet-400' },
+    { label: 'Study Time', value: '12h 30m', icon: Clock, gradient: 'from-emerald-500/20 to-teal-600/20', iconBg: 'bg-emerald-500/20', iconColor: 'text-emerald-400' },
+    { label: 'Quizzes Completed', value: '8', icon: Target, gradient: 'from-cyan-500/20 to-blue-600/20', iconBg: 'bg-cyan-500/20', iconColor: 'text-cyan-400' },
+    { label: 'Average Score', value: '85%', icon: TrendingUp, gradient: 'from-violet-500/20 to-fuchsia-600/20', iconBg: 'bg-violet-500/15', iconColor: 'text-violet-300' },
+  ]
+
   return (
-    <div className="px-6 pt-6">
+    <div className="px-6 pt-6 pb-8">
       <StartSessionModal
         isOpen={isStartModalOpen}
         onClose={() => setIsStartModalOpen(false)}
@@ -47,75 +54,32 @@ function Dashboard() {
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="pt-6 mb-8">
-          <h1 className="text-4xl font-bold text-white mb-2">
-            Welcome back, {firstName}!
+          <h1 className="font-serif text-4xl md:text-5xl text-white mb-2 tracking-tight">
+            Welcome back, <span className="text-shimmer">{firstName}</span>!
           </h1>
-          <p className="text-gray-400 text-lg">
+          <p className="text-neutral-400 text-lg font-light">
             Ready to continue your learning journey?
           </p>
         </div>
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          <div className="group relative">
-            <div className="absolute -inset-0.5 bg-gradient-to-r from-[var(--color-primary)] to-purple-600 rounded-2xl blur opacity-20 group-hover:opacity-40 transition duration-1000"></div>
-            <div className="relative bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-6 hover:bg-white/10 transition-all duration-300">
-              <div className="flex items-center">
-                <div className="p-3 bg-[var(--color-primary)]/20 rounded-xl mr-4">
-                  <BookOpen className="h-8 w-8 text-[var(--color-primary)]" />
-                </div>
-                <div>
-                  <p className="text-3xl font-bold text-white">24</p>
-                  <p className="text-gray-400 text-sm">Notes Created</p>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div className="group relative">
-            <div className="absolute -inset-0.5 bg-gradient-to-r from-green-500 to-teal-600 rounded-2xl blur opacity-20 group-hover:opacity-40 transition duration-1000"></div>
-            <div className="relative bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-6 hover:bg-white/10 transition-all duration-300">
-              <div className="flex items-center">
-                <div className="p-3 bg-green-500/20 rounded-xl mr-4">
-                  <Clock className="h-8 w-8 text-green-400" />
-                </div>
-                <div>
-                  <p className="text-3xl font-bold text-white">12h 30m</p>
-                  <p className="text-gray-400 text-sm">Study Time</p>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5 mb-8">
+          {stats.map((stat) => {
+            const Icon = stat.icon
+            return (
+              <div key={stat.label} className="group glass-card rounded-2xl p-6 hover:-translate-y-2 transition-all duration-500 hover:border-violet-500/30 hover:shadow-[0_0_25px_-10px_rgba(139,92,246,0.3)]">
+                <div className="flex items-center">
+                  <div className={`p-3 ${stat.iconBg} rounded-xl mr-4 group-hover:scale-110 transition-transform duration-500`}>
+                    <Icon className={`h-7 w-7 ${stat.iconColor}`} />
+                  </div>
+                  <div>
+                    <p className="text-3xl font-bold text-white">{stat.value}</p>
+                    <p className="text-neutral-500 text-sm">{stat.label}</p>
+                  </div>
                 </div>
               </div>
-            </div>
-          </div>
-
-          <div className="group relative">
-            <div className="absolute -inset-0.5 bg-gradient-to-r from-orange-500 to-red-600 rounded-2xl blur opacity-20 group-hover:opacity-40 transition duration-1000"></div>
-            <div className="relative bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-6 hover:bg-white/10 transition-all duration-300">
-              <div className="flex items-center">
-                <div className="p-3 bg-orange-500/20 rounded-xl mr-4">
-                  <Target className="h-8 w-8 text-orange-400" />
-                </div>
-                <div>
-                  <p className="text-3xl font-bold text-white">8</p>
-                  <p className="text-gray-400 text-sm">Quizzes Completed</p>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div className="group relative">
-            <div className="absolute -inset-0.5 bg-gradient-to-r from-cyan-500 to-blue-600 rounded-2xl blur opacity-20 group-hover:opacity-40 transition duration-1000"></div>
-            <div className="relative bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-6 hover:bg-white/10 transition-all duration-300">
-              <div className="flex items-center">
-                <div className="p-3 bg-cyan-500/20 rounded-xl mr-4">
-                  <TrendingUp className="h-8 w-8 text-cyan-400" />
-                </div>
-                <div>
-                  <p className="text-3xl font-bold text-white">85%</p>
-                  <p className="text-gray-400 text-sm">Average Score</p>
-                </div>
-              </div>
-            </div>
-          </div>
+            )
+          })}
         </div>
 
         {/* Activity Heatmap */}
@@ -123,62 +87,62 @@ function Dashboard() {
 
         {/* Quick Actions & Recent Activity */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-6">
-            <h2 className="text-2xl font-semibold text-white mb-6">
+          <div className="glass-card rounded-2xl p-6">
+            <h2 className="font-serif text-2xl text-white mb-6">
               Quick Actions
             </h2>
-            <div className="space-y-4">
+            <div className="space-y-3">
               <button
                 onClick={() => navigate("/notes")}
-                className="w-full bg-[var(--color-primary)] hover:bg-blue-600 text-white px-6 py-4 rounded-xl transition-all duration-200 shadow-lg shadow-blue-500/25 hover:shadow-blue-500/40 transform hover:scale-105 text-left font-medium"
+                className="w-full bg-gradient-to-r from-violet-600 to-cyan-500 text-white px-6 py-4 rounded-xl transition-all duration-300 shadow-lg shadow-violet-500/20 hover:shadow-violet-500/35 hover:scale-[1.02] text-left font-medium"
               >
                 Create New Note
               </button>
               <button
                 onClick={startStudySession}
-                className="w-full bg-[var(--color-primary)] hover:bg-blue-600 text-white px-6 py-4 rounded-xl transition-all duration-200 shadow-lg shadow-blue-500/25 hover:shadow-blue-500/40 transform hover:scale-105 text-left font-medium"
+                className="w-full bg-gradient-to-r from-violet-600 to-cyan-500 text-white px-6 py-4 rounded-xl transition-all duration-300 shadow-lg shadow-violet-500/20 hover:shadow-violet-500/35 hover:scale-[1.02] text-left font-medium"
               >
                 Start Study Session
               </button>
               <button
                 onClick={() => navigate("/quizzes")}
-                className="w-full border border-white/20 hover:border-white/30 text-white px-6 py-4 rounded-xl transition-all duration-200 backdrop-blur-sm bg-white/5 hover:bg-white/10 text-left font-medium"
+                className="w-full border border-white/10 hover:border-violet-500/30 text-white px-6 py-4 rounded-xl transition-all duration-300 bg-white/[0.02] hover:bg-white/[0.05] text-left font-medium hover:shadow-[0_0_20px_-10px_rgba(139,92,246,0.2)]"
               >
                 Generate Quiz
               </button>
             </div>
           </div>
 
-          <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-6">
-            <h2 className="text-2xl font-semibold text-white mb-6">
+          <div className="glass-card rounded-2xl p-6">
+            <h2 className="font-serif text-2xl text-white mb-6">
               Recent Activity
             </h2>
-            <div className="space-y-4">
-              <div className="flex items-center p-3 rounded-xl bg-white/5 backdrop-blur-sm">
-                <div className="w-3 h-3 bg-[var(--color-primary)] rounded-full mr-4"></div>
+            <div className="space-y-3">
+              <div className="flex items-center p-3 rounded-xl bg-white/[0.03] border border-white/5">
+                <div className="w-2.5 h-2.5 bg-violet-400 rounded-full mr-4"></div>
                 <div>
                   <span className="text-white text-sm">
                     Completed "Data Structures" quiz - 92%
                   </span>
-                  <p className="text-gray-400 text-xs">2 hours ago</p>
+                  <p className="text-neutral-500 text-xs">2 hours ago</p>
                 </div>
               </div>
-              <div className="flex items-center p-3 rounded-xl bg-white/5 backdrop-blur-sm">
-                <div className="w-3 h-3 bg-green-400 rounded-full mr-4"></div>
+              <div className="flex items-center p-3 rounded-xl bg-white/[0.03] border border-white/5">
+                <div className="w-2.5 h-2.5 bg-emerald-400 rounded-full mr-4"></div>
                 <div>
                   <span className="text-white text-sm">
                     Added notes for "Machine Learning" subject
                   </span>
-                  <p className="text-gray-400 text-xs">1 day ago</p>
+                  <p className="text-neutral-500 text-xs">1 day ago</p>
                 </div>
               </div>
-              <div className="flex items-center p-3 rounded-xl bg-white/5 backdrop-blur-sm">
-                <div className="w-3 h-3 bg-yellow-400 rounded-full mr-4"></div>
+              <div className="flex items-center p-3 rounded-xl bg-white/[0.03] border border-white/5">
+                <div className="w-2.5 h-2.5 bg-cyan-400 rounded-full mr-4"></div>
                 <div>
                   <span className="text-white text-sm">
                     Study session: 45 minutes focused
                   </span>
-                  <p className="text-gray-400 text-xs">2 days ago</p>
+                  <p className="text-neutral-500 text-xs">2 days ago</p>
                 </div>
               </div>
             </div>

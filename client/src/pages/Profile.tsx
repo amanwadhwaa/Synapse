@@ -276,7 +276,7 @@ export default function Profile() {
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-96">
-        <div className="h-12 w-12 animate-spin rounded-full border-b-2 border-[var(--color-primary)]" />
+        <div className="h-12 w-12 animate-spin rounded-full border-b-2 border-violet-500" />
       </div>
     );
   }
@@ -284,25 +284,26 @@ export default function Profile() {
   return (
     <div className="px-6 py-8">
       <div className="max-w-7xl mx-auto space-y-8">
-        <section className="relative overflow-hidden rounded-3xl border border-white/10 bg-white/5 backdrop-blur-xl p-8">
-          <div className="absolute -top-20 -right-10 h-52 w-52 rounded-full bg-blue-500/15 blur-3xl" />
-          <div className="absolute -bottom-24 left-24 h-56 w-56 rounded-full bg-cyan-500/10 blur-3xl" />
+        {/* Profile Banner */}
+        <section className="relative overflow-hidden rounded-3xl glass p-8">
+          <div className="orb orb-violet w-52 h-52 -top-20 -right-10 opacity-20" style={{ animationDuration: '8s' }}></div>
+          <div className="orb orb-cyan w-56 h-56 -bottom-24 left-24 opacity-15" style={{ animationDuration: '12s' }}></div>
 
           <div className="relative flex flex-col md:flex-row md:items-center md:justify-between gap-6">
             <div className="flex items-center gap-5">
-              <div className="h-24 w-24 rounded-full bg-gradient-to-br from-blue-500 to-cyan-400 text-white text-4xl font-bold flex items-center justify-center shadow-xl shadow-blue-500/25">
+              <div className="h-24 w-24 rounded-full bg-gradient-to-br from-violet-500 to-cyan-400 text-white text-4xl font-bold flex items-center justify-center shadow-xl shadow-violet-500/25">
                 {avatarInitial}
               </div>
 
               <div>
-                <h1 className="text-4xl font-extrabold text-white mb-1">
+                <h1 className="font-serif text-4xl text-white mb-1 tracking-tight">
                   {profile?.name || user?.name}
                 </h1>
-                <div className="flex items-center gap-2 text-gray-300 mb-1">
+                <div className="flex items-center gap-2 text-neutral-300 mb-1">
                   <Mail className="h-4 w-4" />
                   <span>{profile?.email || user?.email}</span>
                 </div>
-                <div className="flex items-center gap-2 text-gray-400 text-sm">
+                <div className="flex items-center gap-2 text-neutral-500 text-sm">
                   <Calendar className="h-4 w-4" />
                   <span>Member since {memberSince}</span>
                 </div>
@@ -314,7 +315,7 @@ export default function Profile() {
                 const settingsSection = document.getElementById("account-settings");
                 settingsSection?.scrollIntoView({ behavior: "smooth" });
               }}
-              className="inline-flex items-center gap-2 rounded-xl border border-white/20 bg-white/10 px-4 py-2.5 text-white hover:bg-white/15 transition-colors"
+              className="inline-flex items-center gap-2 rounded-xl border border-white/10 bg-white/[0.03] px-4 py-2.5 text-white hover:bg-white/[0.06] transition-all duration-300"
             >
               <Pencil className="h-4 w-4" />
               Edit Profile
@@ -322,76 +323,61 @@ export default function Profile() {
           </div>
         </section>
 
+        {/* Stats */}
         <section className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
-          <div className="rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl p-5">
-            <div className="flex items-center justify-between mb-3">
-              <BookOpen className="h-5 w-5 text-blue-300" />
-              <span className="text-xs text-gray-400">Notes</span>
-            </div>
-            <p className="text-3xl font-bold text-white">{totalNotes}</p>
-            <p className="text-sm text-gray-400 mt-1">Total Notes</p>
-          </div>
-
-          <div className="rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl p-5">
-            <div className="flex items-center justify-between mb-3">
-              <Clock3 className="h-5 w-5 text-cyan-300" />
-              <span className="text-xs text-gray-400">Hours</span>
-            </div>
-            <p className="text-3xl font-bold text-white">{totalStudyHours}</p>
-            <p className="text-sm text-gray-400 mt-1">Total Study Hours</p>
-          </div>
-
-          <div className="rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl p-5">
-            <div className="flex items-center justify-between mb-3">
-              <Trophy className="h-5 w-5 text-green-300" />
-              <span className="text-xs text-gray-400">Completed</span>
-            </div>
-            <p className="text-3xl font-bold text-white">{quizStats.completedCount}</p>
-            <p className="text-sm text-gray-400 mt-1">Quizzes Completed</p>
-          </div>
-
-          <div className="rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl p-5">
-            <div className="flex items-center justify-between mb-3">
-              <Target className="h-5 w-5 text-orange-300" />
-              <span className="text-xs text-gray-400">Average</span>
-            </div>
-            <p className="text-3xl font-bold text-white">{quizStats.averageScore}%</p>
-            <p className="text-sm text-gray-400 mt-1">Average Score</p>
-          </div>
+          {[
+            { icon: BookOpen, label: 'Total Notes', value: totalNotes, color: 'text-violet-300' },
+            { icon: Clock3, label: 'Total Study Hours', value: totalStudyHours, color: 'text-cyan-300' },
+            { icon: Trophy, label: 'Quizzes Completed', value: quizStats.completedCount, color: 'text-emerald-300' },
+            { icon: Target, label: 'Average Score', value: `${quizStats.averageScore}%`, color: 'text-violet-300' },
+          ].map((stat) => {
+            const Icon = stat.icon
+            return (
+              <div key={stat.label} className="glass-card rounded-2xl p-5">
+                <div className="flex items-center justify-between mb-3">
+                  <Icon className={`h-5 w-5 ${stat.color}`} />
+                  <span className="text-xs text-neutral-500 uppercase tracking-widest">{stat.label.split(' ').pop()}</span>
+                </div>
+                <p className="text-3xl font-bold text-white">{stat.value}</p>
+                <p className="text-sm text-neutral-500 mt-1">{stat.label}</p>
+              </div>
+            )
+          })}
         </section>
 
+        {/* Settings Grid */}
         <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
           <section
             id="account-settings"
-            className="rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl p-6"
+            className="glass-card rounded-2xl p-6"
           >
-            <h2 className="text-2xl font-semibold text-white mb-5">Account Settings</h2>
+            <h2 className="font-serif text-2xl text-white mb-5">Account Settings</h2>
 
             <div className="space-y-4">
               <div>
-                <label className="block text-sm text-gray-300 mb-2">Name</label>
+                <label className="block text-sm text-neutral-300 mb-2">Name</label>
                 <input
                   type="text"
                   value={accountForm.name}
                   onChange={(event) =>
                     setAccountForm((prev) => ({ ...prev, name: event.target.value }))
                   }
-                  className="w-full rounded-xl border border-white/10 bg-slate-900/75 px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-blue-500/40"
+                  className="w-full rounded-xl border border-white/10 bg-[#0a0a0a] px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-violet-500/30 focus:border-violet-500/50"
                 />
               </div>
 
               <div>
-                <label className="block text-sm text-gray-300 mb-2">Email</label>
+                <label className="block text-sm text-neutral-300 mb-2">Email</label>
                 <input
                   type="email"
                   value={profile?.email || user?.email || ""}
                   readOnly
-                  className="w-full rounded-xl border border-white/10 bg-slate-800/60 px-4 py-3 text-gray-300"
+                  className="w-full rounded-xl border border-white/5 bg-[#080808] px-4 py-3 text-neutral-400"
                 />
               </div>
 
               <div>
-                <label className="block text-sm text-gray-300 mb-2">Institution</label>
+                <label className="block text-sm text-neutral-300 mb-2">Institution</label>
                 <input
                   type="text"
                   value={accountForm.institution}
@@ -401,26 +387,26 @@ export default function Profile() {
                       institution: event.target.value,
                     }))
                   }
-                  className="w-full rounded-xl border border-white/10 bg-slate-900/75 px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-blue-500/40"
+                  className="w-full rounded-xl border border-white/10 bg-[#0a0a0a] px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-violet-500/30 focus:border-violet-500/50"
                 />
               </div>
 
               <div>
-                <label className="block text-sm text-gray-300 mb-2">Grade / Year</label>
+                <label className="block text-sm text-neutral-300 mb-2">Grade / Year</label>
                 <input
                   type="text"
                   value={accountForm.grade}
                   onChange={(event) =>
                     setAccountForm((prev) => ({ ...prev, grade: event.target.value }))
                   }
-                  className="w-full rounded-xl border border-white/10 bg-slate-900/75 px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-blue-500/40"
+                  className="w-full rounded-xl border border-white/10 bg-[#0a0a0a] px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-violet-500/30 focus:border-violet-500/50"
                 />
               </div>
 
               <button
                 onClick={() => void handleSaveAccount()}
                 disabled={savingAccount}
-                className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-blue-600 to-cyan-500 px-5 py-2.5 text-white font-semibold shadow-lg shadow-blue-500/25 hover:from-blue-500 hover:to-cyan-400 transition-all disabled:opacity-50"
+                className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-violet-600 to-cyan-500 px-5 py-2.5 text-white font-semibold shadow-lg shadow-violet-500/20 hover:shadow-violet-500/35 transition-all duration-300 disabled:opacity-50"
               >
                 <Save className="h-4 w-4" />
                 {savingAccount ? "Saving..." : "Save Changes"}
@@ -428,12 +414,12 @@ export default function Profile() {
             </div>
           </section>
 
-          <section className="rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl p-6">
-            <h2 className="text-2xl font-semibold text-white mb-5">Preferences</h2>
+          <section className="glass-card rounded-2xl p-6">
+            <h2 className="font-serif text-2xl text-white mb-5">Preferences</h2>
 
             <div className="space-y-4">
               <div>
-                <label className="block text-sm text-gray-300 mb-2">Preferred Language</label>
+                <label className="block text-sm text-neutral-300 mb-2">Preferred Language</label>
                 <select
                   value={preferencesForm.language}
                   onChange={(event) =>
@@ -442,7 +428,7 @@ export default function Profile() {
                       language: event.target.value,
                     }))
                   }
-                  className="w-full rounded-xl border border-white/10 bg-slate-900/75 px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-blue-500/40"
+                  className="w-full rounded-xl border border-white/10 bg-[#0a0a0a] px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-violet-500/30 focus:border-violet-500/50"
                 >
                   {LANGUAGE_OPTIONS.map((language) => (
                     <option key={language} value={language}>
@@ -453,7 +439,7 @@ export default function Profile() {
               </div>
 
               <div>
-                <label className="block text-sm text-gray-300 mb-2">Pomodoro work duration (minutes)</label>
+                <label className="block text-sm text-neutral-300 mb-2">Pomodoro work duration (minutes)</label>
                 <input
                   type="number"
                   min={1}
@@ -464,12 +450,12 @@ export default function Profile() {
                       pomodoroWorkDuration: event.target.value,
                     }))
                   }
-                  className="w-full rounded-xl border border-white/10 bg-slate-900/75 px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-blue-500/40"
+                  className="w-full rounded-xl border border-white/10 bg-[#0a0a0a] px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-violet-500/30 focus:border-violet-500/50"
                 />
               </div>
 
               <div>
-                <label className="block text-sm text-gray-300 mb-2">Pomodoro break duration (minutes)</label>
+                <label className="block text-sm text-neutral-300 mb-2">Pomodoro break duration (minutes)</label>
                 <input
                   type="number"
                   min={1}
@@ -480,14 +466,14 @@ export default function Profile() {
                       pomodoroBreakDuration: event.target.value,
                     }))
                   }
-                  className="w-full rounded-xl border border-white/10 bg-slate-900/75 px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-blue-500/40"
+                  className="w-full rounded-xl border border-white/10 bg-[#0a0a0a] px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-violet-500/30 focus:border-violet-500/50"
                 />
               </div>
 
               <button
                 onClick={() => void handleSavePreferences()}
                 disabled={savingPreferences}
-                className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-blue-600 to-cyan-500 px-5 py-2.5 text-white font-semibold shadow-lg shadow-blue-500/25 hover:from-blue-500 hover:to-cyan-400 transition-all disabled:opacity-50"
+                className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-violet-600 to-cyan-500 px-5 py-2.5 text-white font-semibold shadow-lg shadow-violet-500/20 hover:shadow-violet-500/35 transition-all duration-300 disabled:opacity-50"
               >
                 <Save className="h-4 w-4" />
                 {savingPreferences ? "Saving..." : "Save Preferences"}
@@ -496,8 +482,9 @@ export default function Profile() {
           </section>
         </div>
 
-        <section className="rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl p-6">
-          <h2 className="text-2xl font-semibold text-white mb-5">Subjects</h2>
+        {/* Subjects */}
+        <section className="glass-card rounded-2xl p-6">
+          <h2 className="font-serif text-2xl text-white mb-5">Subjects</h2>
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-5">
             <input
@@ -505,18 +492,18 @@ export default function Profile() {
               value={newSubjectName}
               onChange={(event) => setNewSubjectName(event.target.value)}
               placeholder="Subject name"
-              className="rounded-xl border border-white/10 bg-slate-900/75 px-4 py-3 text-white placeholder:text-white/50 focus:outline-none focus:ring-2 focus:ring-blue-500/40"
+              className="rounded-xl border border-white/10 bg-[#0a0a0a] px-4 py-3 text-white placeholder:text-neutral-500 focus:outline-none focus:ring-2 focus:ring-violet-500/30 focus:border-violet-500/50"
             />
             <input
               type="date"
               value={newSubjectExamDate}
               onChange={(event) => setNewSubjectExamDate(event.target.value)}
-              className="rounded-xl border border-white/10 bg-slate-900/75 px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-blue-500/40"
+              className="rounded-xl border border-white/10 bg-[#0a0a0a] px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-violet-500/30 focus:border-violet-500/50"
             />
             <button
               onClick={() => void handleAddSubject()}
               disabled={addingSubject}
-              className="inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-blue-600 to-cyan-500 px-5 py-3 text-white font-semibold shadow-lg shadow-blue-500/25 hover:from-blue-500 hover:to-cyan-400 transition-all disabled:opacity-50"
+              className="inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-violet-600 to-cyan-500 px-5 py-3 text-white font-semibold shadow-lg shadow-violet-500/20 hover:shadow-violet-500/35 transition-all duration-300 disabled:opacity-50"
             >
               <Plus className="h-4 w-4" />
               {addingSubject ? "Adding..." : "Add New Subject"}
@@ -524,17 +511,17 @@ export default function Profile() {
           </div>
 
           {subjects.length === 0 ? (
-            <p className="text-gray-300">No subjects yet. Add your first subject above.</p>
+            <p className="text-neutral-400 font-light">No subjects yet. Add your first subject above.</p>
           ) : (
             <div className="space-y-3">
               {subjects.map((subject) => (
                 <div
                   key={subject.id}
-                  className="rounded-xl border border-white/10 bg-slate-900/45 px-4 py-3 flex items-center justify-between"
+                  className="rounded-xl border border-white/5 bg-[#0a0a0a]/60 px-4 py-3 flex items-center justify-between"
                 >
                   <div>
                     <p className="text-white font-medium">{subject.name}</p>
-                    <p className="text-sm text-gray-400">
+                    <p className="text-sm text-neutral-500">
                       Exam date:{" "}
                       {subject.examDate
                         ? new Date(subject.examDate).toLocaleDateString("en-US", {
@@ -549,7 +536,7 @@ export default function Profile() {
                   <button
                     onClick={() => void handleDeleteSubject(subject.id)}
                     disabled={deletingSubjectId === subject.id}
-                    className="inline-flex items-center gap-2 rounded-lg border border-red-400/40 bg-red-500/10 px-3 py-2 text-red-200 hover:bg-red-500/20 transition-colors disabled:opacity-50"
+                    className="inline-flex items-center gap-2 rounded-lg border border-red-400/20 bg-red-500/10 px-3 py-2 text-red-300 hover:bg-red-500/20 transition-colors disabled:opacity-50"
                   >
                     <Trash2 className="h-4 w-4" />
                     Delete
@@ -560,8 +547,9 @@ export default function Profile() {
           )}
         </section>
 
-        <section className="rounded-2xl border border-red-400/30 bg-red-500/10 backdrop-blur-xl p-6">
-          <h2 className="text-xl font-semibold text-red-200 mb-4">Danger Zone</h2>
+        {/* Danger Zone */}
+        <section className="rounded-2xl border border-red-400/20 bg-red-500/5 backdrop-blur-xl p-6">
+          <h2 className="font-serif text-xl text-red-200 mb-4">Danger Zone</h2>
           <button
             onClick={handleSignOut}
             className="inline-flex items-center gap-2 rounded-xl bg-red-600 hover:bg-red-500 text-white px-5 py-2.5 font-semibold transition-colors"

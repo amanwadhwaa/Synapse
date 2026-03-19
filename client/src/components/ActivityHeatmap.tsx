@@ -1,13 +1,13 @@
 import { useState } from "react";
 import dayjs from "dayjs";
 
-// Color scale for minutes studied
+// Color scale using violet/cyan theme
 const colorScale = [
-	"#2d2d2d", // 0 mins (grey)
-	"#a7f3d0", // 1-30 mins (light green)
-	"#34d399", // 31-60 mins (medium green)
-	"#059669", // 61-120 mins (dark green)
-	"#065f46", // 120+ mins (deep green)
+	"#1a1a1a", // 0 mins (dark)
+	"#c4b5fd", // 1-30 mins (light violet)
+	"#8b5cf6", // 31-60 mins (violet)
+	"#7c3aed", // 61-120 mins (dark violet)
+	"#5b21b6", // 120+ mins (deep violet)
 ];
 
 // Helper to get color index
@@ -59,7 +59,7 @@ export default function ActivityHeatmap() {
 
 	return (
 		<div className="mb-8">
-			<h2 className="text-xl font-semibold text-white mb-4">Study Activity</h2>
+			<h2 className="font-serif text-xl text-white mb-4">Study Activity</h2>
 			<div className="flex items-center">
 				<svg width={52 * (cellSize + cellGap)} height={7 * (cellSize + cellGap)}>
 					{days.map((day, idx) => {
@@ -74,7 +74,7 @@ export default function ActivityHeatmap() {
 								height={cellSize}
 								rx={3}
 								fill={colorScale[getColorIdx(day.mins)]}
-								className="cursor-pointer transition duration-150"
+								className="cursor-pointer transition-all duration-300 hover:brightness-125"
 								onMouseEnter={() => setHovered(day)}
 								onMouseLeave={() => setHovered(null)}
 							/>
@@ -83,26 +83,24 @@ export default function ActivityHeatmap() {
 				</svg>
 				{/* Legend */}
 				<div className="ml-8 flex items-center">
-					<span className="text-gray-400 text-xs mr-2">Less</span>
+					<span className="text-neutral-600 text-xs mr-2">Less</span>
 					{colorScale.map((color, i) => (
-						<div key={i} className="w-5 h-5 mx-1 rounded bg-white/10 flex items-center justify-center">
-							<div style={{ background: color, width: 16, height: 16, borderRadius: 4 }}></div>
-						</div>
+						<div key={i} className="w-5 h-5 mx-0.5 rounded" style={{ background: color }}></div>
 					))}
-					<span className="text-gray-400 text-xs ml-2">More</span>
+					<span className="text-neutral-600 text-xs ml-2">More</span>
 				</div>
 			</div>
 			{/* Tooltip */}
 			{hovered && (
-				<div className="mt-2 px-4 py-2 bg-black/80 rounded shadow-lg inline-block text-white text-xs">
-					<span>{hovered.date}</span> — <span>{hovered.mins} mins studied</span>
+				<div className="mt-2 px-4 py-2 glass rounded-lg inline-block text-white text-xs">
+					<span className="text-neutral-400">{hovered.date}</span> — <span>{hovered.mins} mins studied</span>
 				</div>
 			)}
 			{/* Streak stats */}
-			<div className="mt-4 flex space-x-6 text-white text-sm">
-				<div>Current streak: <span className="font-bold">{streaks.current}</span> days</div>
-				<div>Longest streak: <span className="font-bold">{streaks.longest}</span> days</div>
-				<div>Total active days: <span className="font-bold">{streaks.total}</span></div>
+			<div className="mt-4 flex space-x-6 text-neutral-400 text-sm">
+				<div>Current streak: <span className="font-bold text-violet-300">{streaks.current}</span> days</div>
+				<div>Longest streak: <span className="font-bold text-cyan-300">{streaks.longest}</span> days</div>
+				<div>Total active days: <span className="font-bold text-white">{streaks.total}</span></div>
 			</div>
 		</div>
 	);

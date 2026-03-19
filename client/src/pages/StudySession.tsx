@@ -46,12 +46,18 @@ export default function StudySession() {
   };
 
   return (
-    <div className="h-screen w-full bg-black flex flex-col items-center justify-center">
-      <h1 className="text-white text-8xl font-bold">{formatTime(timeLeft)}</h1>
+    <div className="h-screen w-full bg-[#030303] flex flex-col items-center justify-center relative overflow-hidden">
+      {/* Background orbs */}
+      <div className="orb orb-violet w-[300px] h-[300px] top-1/4 left-1/4 opacity-15" style={{ animationDuration: '10s' }}></div>
+      <div className="orb orb-cyan w-[200px] h-[200px] bottom-1/4 right-1/4 opacity-10" style={{ animationDuration: '14s' }}></div>
 
-      <p className="text-gray-500 mt-6 text-lg">Focus Mode</p>
+      <h1 className="relative text-white font-serif text-8xl md:text-9xl font-normal tracking-tightest" style={{ textShadow: '0 0 60px rgba(139,92,246,0.15)' }}>
+        {formatTime(timeLeft)}
+      </h1>
 
-      <p className="text-gray-600 text-sm mt-2">Press ESC to exit</p>
+      <p className="relative text-neutral-500 mt-6 text-lg font-light">Focus Mode</p>
+
+      <p className="relative text-neutral-700 text-sm mt-2">Press ESC to exit</p>
     </div>
   );
 }

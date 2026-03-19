@@ -2,11 +2,226 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Custom colors */
+/* ── Synapse Design System Tokens ──────────────────────── */
 @layer base {
   :root {
-    --color-primary: #3B82F6;
-    --color-secondary: #1e293b;
-    --color-background: #0f172a;
+    --color-primary: #8B5CF6;
+    --color-secondary: #0a0a0a;
+    --color-background: #030303;
+    --color-cyan: #06B6D4;
+    --color-emerald: #10B981;
+    --ease-snappy: cubic-bezier(0.23, 1, 0.32, 1);
   }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    background: #030303;
+    color: #fff;
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  *,
+  *::before,
+  *::after {
+    transition-timing-function: var(--ease-snappy);
+  }
+
+  /* Make select option backgrounds dark */
+  option {
+    background: #0a0a0a;
+    color: #fff;
+  }
+}
+
+/* ── Glass Utility ─────────────────────────────────────── */
+@layer components {
+  .glass {
+    background: rgba(10, 10, 10, 0.7);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+  }
+
+  .glass-card {
+    background: rgba(255, 255, 255, 0.02);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+  }
+
+  /* ── Shiny Border Button ─────────────────────────────── */
+  .shiny-border-btn {
+    position: relative;
+    padding: 1px;
+    border-radius: 9999px;
+    overflow: hidden;
+    display: inline-flex;
+  }
+
+  .shiny-border-btn::before {
+    content: '';
+    position: absolute;
+    inset: -50%;
+    width: 200%;
+    height: 200%;
+    background: conic-gradient(
+      from 0deg,
+      transparent 0%,
+      #8b5cf6 40%,
+      #06b6d4 50%,
+      transparent 60%
+    );
+    animation: spin-border 4s linear infinite;
+  }
+
+  .shiny-border-btn > * {
+    position: relative;
+    z-index: 1;
+    background: #0a0a0a;
+    border-radius: 9999px;
+  }
+
+  /* ── Shimmer Text ────────────────────────────────────── */
+  .text-shimmer {
+    background: linear-gradient(
+      90deg,
+      #a78bfa 0%,
+      #ffffff 40%,
+      #ffffff 60%,
+      #22d3ee 100%
+    );
+    background-size: 200% 100%;
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    animation: shimmer 3s ease-in-out infinite;
+  }
+
+  /* ── Floating Orb ────────────────────────────────────── */
+  .orb {
+    position: absolute;
+    border-radius: 9999px;
+    filter: blur(80px);
+    pointer-events: none;
+    animation: float-orb 8s ease-in-out infinite;
+  }
+
+  .orb-violet {
+    background: rgba(139, 92, 246, 0.4);
+  }
+
+  .orb-cyan {
+    background: rgba(6, 182, 212, 0.4);
+  }
+
+  /* ── Staggered Entrance ──────────────────────────────── */
+  .stagger-in {
+    opacity: 0;
+    transform: translateY(20px);
+    animation: stagger-in 0.6s var(--ease-snappy) forwards;
+  }
+
+  /* ── Ticker ──────────────────────────────────────────── */
+  .ticker-track {
+    display: flex;
+    animation: ticker-scroll 40s linear infinite;
+    width: max-content;
+  }
+}
+
+/* ── Keyframes ─────────────────────────────────────────── */
+@keyframes float-orb {
+  0%, 100% {
+    transform: translateY(0) scale(1);
+  }
+  50% {
+    transform: translateY(-20px) scale(1.05);
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+@keyframes spin-border {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes stagger-in {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes ticker-scroll {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+@keyframes pulse-glow {
+  0%, 100% {
+    opacity: 0.5;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.2);
+  }
+}
+
+/* ── Scrollbar Styling ─────────────────────────────────── */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(139, 92, 246, 0.3);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(139, 92, 246, 0.5);
+}
+
+/* ── Font Classes ──────────────────────────────────────── */
+.font-serif {
+  font-family: 'Instrument Serif', serif;
+}
+
+.font-sans {
+  font-family: 'Inter', system-ui, sans-serif;
+}
+
+.font-mono {
+  font-family: 'SF Mono', 'Fira Code', 'Cascadia Code', ui-monospace, monospace;
+}
+
+/* ── Letter Spacing Overrides ──────────────────────────── */
+.tracking-tightest {
+  letter-spacing: -0.05em;
 }

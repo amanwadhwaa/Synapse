@@ -129,9 +129,9 @@ const PomodoroTimer: React.FC = () => {
 
   const getModeColor = (mode: PomodoroMode) => {
     switch (mode) {
-      case 'work': return '#3b82f6';
-      case 'shortBreak': return '#10b981';
-      case 'longBreak': return '#f59e0b';
+      case 'work': return '#8b5cf6';
+      case 'shortBreak': return '#06b6d4';
+      case 'longBreak': return '#10b981';
     }
   };
 
@@ -150,7 +150,7 @@ const PomodoroTimer: React.FC = () => {
       <div className="fixed bottom-6 right-6 z-50">
         <button
           onClick={toggleMinimized}
-          className="bg-[var(--color-primary)] hover:bg-blue-600 text-white p-3 rounded-full shadow-lg transition-all duration-200"
+          className="bg-gradient-to-r from-violet-600 to-cyan-500 text-white p-3 rounded-full shadow-lg shadow-violet-500/25 transition-all duration-300 hover:shadow-violet-500/40 hover:scale-105"
         >
           <Clock className="h-6 w-6" />
         </button>
@@ -159,12 +159,12 @@ const PomodoroTimer: React.FC = () => {
   }
 
   return (
-    <div className="fixed bottom-6 right-6 z-50 bg-white/10 backdrop-blur-xl border border-white/20 rounded-2xl p-6 shadow-2xl max-w-sm">
+    <div className="fixed bottom-6 right-6 z-50 glass rounded-2xl p-6 shadow-2xl shadow-violet-900/20 max-w-sm">
       <div className="flex items-center justify-between mb-4">
         <h3 className="text-white font-semibold">Pomodoro Timer</h3>
         <button
           onClick={toggleMinimized}
-          className="text-gray-400 hover:text-white transition-colors"
+          className="text-neutral-400 hover:text-white transition-colors"
         >
           <Minimize2 className="h-5 w-5" />
         </button>
@@ -178,7 +178,7 @@ const PomodoroTimer: React.FC = () => {
               cx="60"
               cy="60"
               r="50"
-              stroke="rgba(255,255,255,0.2)"
+              stroke="rgba(255,255,255,0.05)"
               strokeWidth="8"
               fill="none"
             />
@@ -193,12 +193,13 @@ const PomodoroTimer: React.FC = () => {
               strokeDashoffset={`${2 * Math.PI * 50 * (1 - progress / 100)}`}
               strokeLinecap="round"
               className="transition-all duration-1000"
+              style={{ filter: `drop-shadow(0 0 6px ${getModeColor(currentMode)}40)` }}
             />
           </svg>
           <div className="absolute inset-0 flex items-center justify-center">
             <div className="text-center">
-              <div className="text-2xl font-bold text-white">{formatTime(timeRemaining)}</div>
-              <div className="text-sm text-gray-400 capitalize">{currentMode.replace('Break', ' Break')}</div>
+              <div className="text-2xl font-bold text-white font-mono">{formatTime(timeRemaining)}</div>
+              <div className="text-xs text-neutral-500 capitalize">{currentMode.replace('Break', ' Break')}</div>
             </div>
           </div>
         </div>
@@ -207,7 +208,7 @@ const PomodoroTimer: React.FC = () => {
         <select
           value={selectedSubjectId || ''}
           onChange={(e) => setSubject(e.target.value || null)}
-          className="w-full mb-4 bg-white/5 border border-white/20 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-[var(--color-primary)]"
+          className="w-full mb-4 bg-[#0a0a0a] border border-white/10 rounded-xl px-3 py-2 text-white text-sm focus:outline-none focus:border-violet-500/50 focus:ring-2 focus:ring-violet-500/20"
         >
           <option value="">Select Subject</option>
           {subjects.map((subject) => (
@@ -221,19 +222,19 @@ const PomodoroTimer: React.FC = () => {
         <div className="flex items-center space-x-2">
           <button
             onClick={isRunning ? pause : start}
-            className="bg-[var(--color-primary)] hover:bg-blue-600 text-white p-3 rounded-full transition-colors"
+            className="bg-gradient-to-r from-violet-600 to-cyan-500 text-white p-3 rounded-full transition-all duration-300 shadow-lg shadow-violet-500/20 hover:shadow-violet-500/35 hover:scale-105"
           >
             {isRunning ? <Pause className="h-5 w-5" /> : <Play className="h-5 w-5" />}
           </button>
           <button
             onClick={reset}
-            className="bg-white/10 hover:bg-white/20 text-white p-3 rounded-full transition-colors"
+            className="bg-white/[0.03] border border-white/10 hover:bg-white/[0.06] text-white p-3 rounded-full transition-all duration-300"
           >
             <RotateCcw className="h-5 w-5" />
           </button>
         </div>
 
-        <div className="text-xs text-gray-400 mt-2">
+        <div className="text-xs text-neutral-600 mt-2">
           Sessions completed: {sessionCount}
         </div>
       </div>

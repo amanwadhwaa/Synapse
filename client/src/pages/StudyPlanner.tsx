@@ -32,23 +32,24 @@ export default function StudyPlanner() {
   };
 
   return (
-    <div style={{ padding: "24px" }}>
-      <h1 className="text-3xl font-bold text-white mb-6">Study Planner</h1>
+    <div className="px-6 py-8">
+      <h1 className="font-serif text-3xl md:text-4xl text-white mb-6 tracking-tight">Study Planner</h1>
 
-      <div className="bg-white/5 backdrop-blur-lg border border-white/10 rounded-xl p-6 max-w-md">
+      <div className="glass-card rounded-2xl p-6 max-w-md">
         <ExamForm setExams={setExams} />
       </div>
-      <h2 className="text-xl font-semibold text-white mt-8 mb-4">Your Exams</h2>
+
+      <h2 className="font-serif text-xl text-white mt-8 mb-4">Your Exams</h2>
 
       <div className="space-y-3">
         {exams.map((exam) => (
           <div
             key={exam.id}
-            className="bg-white/5 border border-white/10 rounded-lg p-4 flex justify-between"
+            className="glass-card rounded-xl p-4 flex justify-between items-center"
           >
             <div>
               <p className="text-white font-medium">{exam.subject}</p>
-              <p className="text-gray-400 text-sm">
+              <p className="text-neutral-500 text-sm">
                 {new Date(exam.examDate).toLocaleDateString("en-US", {
                   year: "numeric",
                   month: "short",
@@ -57,11 +58,11 @@ export default function StudyPlanner() {
               </p>
             </div>
 
-            <span className="text-blue-400">{exam.difficulty}</span>
+            <span className="text-violet-400 text-sm">{exam.difficulty}</span>
 
             <button
               onClick={() => deleteExam(exam.id)}
-              className="text-red-400 hover:text-red-300 text-sm"
+              className="text-red-400 hover:text-red-300 text-sm transition-colors"
             >
               Delete
             </button>
@@ -69,11 +70,11 @@ export default function StudyPlanner() {
         ))}
       </div>
 
-      <div style={{ marginTop: "20px" }}>
+      <div className="mt-6">
         <GeneratePlan setPlan={setPlan} />
       </div>
 
-      <div style={{ marginTop: "30px" }}>
+      <div className="mt-8">
         <StudyPlan plan={plan} />
       </div>
     </div>

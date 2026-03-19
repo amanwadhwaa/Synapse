@@ -229,7 +229,7 @@ const Notes: React.FC = () => {
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-96">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[var(--color-primary)]"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-violet-500"></div>
       </div>
     );
   }
@@ -239,12 +239,12 @@ const Notes: React.FC = () => {
       {/* Header */}
       <div className="flex items-center justify-between mb-8">
         <div>
-          <h1 className="text-4xl font-bold text-white mb-2">Notes</h1>
-          <p className="text-gray-400">Create and manage your study notes</p>
+          <h1 className="font-serif text-4xl text-white mb-2 tracking-tight">Notes</h1>
+          <p className="text-neutral-400 font-light">Create and manage your study notes</p>
         </div>
         <button
           onClick={() => setShowCreateForm(true)}
-          className="bg-[var(--color-primary)] hover:bg-blue-600 text-white px-6 py-3 rounded-xl transition-all duration-200 shadow-lg shadow-blue-500/25 hover:shadow-blue-500/40 transform hover:scale-105 flex items-center space-x-2"
+          className="bg-gradient-to-r from-violet-600 to-cyan-500 text-white px-6 py-3 rounded-xl transition-all duration-300 shadow-lg shadow-violet-500/20 hover:shadow-violet-500/35 hover:scale-[1.02] flex items-center space-x-2"
         >
           <Plus className="h-5 w-5" />
           <span>New Note</span>
@@ -253,13 +253,13 @@ const Notes: React.FC = () => {
 
       {/* Create Note Modal */}
       {showCreateForm && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white/10 backdrop-blur-xl border border-white/20 rounded-2xl p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="glass rounded-2xl p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto border-violet-500/10">
             <div className="flex items-center justify-between mb-6">
-              <h2 className="text-2xl font-bold text-white">Create New Note</h2>
+              <h2 className="font-serif text-2xl text-white">Create New Note</h2>
               <button
                 onClick={() => setShowCreateForm(false)}
-                className="text-gray-400 hover:text-white transition-colors"
+                className="text-neutral-400 hover:text-white transition-colors"
               >
                 <X className="h-6 w-6" />
               </button>
@@ -267,24 +267,24 @@ const Notes: React.FC = () => {
 
             <form onSubmit={handleCreateNote} className="space-y-6">
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">Title</label>
+                <label className="block text-sm font-medium text-neutral-300 mb-2">Title</label>
                 <input
                   type="text"
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
-                  className="w-full px-4 py-3 bg-white/5 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-[var(--color-primary)]"
+                  className="w-full px-4 py-3 bg-[#0a0a0a] border border-white/10 rounded-xl text-white placeholder-neutral-500 focus:outline-none focus:border-violet-500/50 focus:ring-2 focus:ring-violet-500/20"
                   placeholder="Enter note title..."
                   required
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">Subject (Optional)</label>
+                <label className="block text-sm font-medium text-neutral-300 mb-2">Subject (Optional)</label>
                 <div className="flex gap-2">
                   <select
                     value={selectedSubjectId}
                     onChange={(e) => setSelectedSubjectId(e.target.value)}
-                    className="flex-1 px-4 py-3 bg-white/5 border border-white/20 rounded-lg text-white focus:outline-none focus:border-[var(--color-primary)]"
+                    className="flex-1 px-4 py-3 bg-[#0a0a0a] border border-white/10 rounded-xl text-white focus:outline-none focus:border-violet-500/50 focus:ring-2 focus:ring-violet-500/20"
                   >
                     <option value="">Select a subject...</option>
                     {subjects.map((subject) => (
@@ -296,7 +296,7 @@ const Notes: React.FC = () => {
                   <button
                     type="button"
                     onClick={() => setShowCreateSubject(true)}
-                    className="px-4 py-3 bg-white/10 hover:bg-white/20 border border-white/20 rounded-lg text-white transition-colors"
+                    className="px-4 py-3 bg-white/[0.03] hover:bg-white/[0.06] border border-white/10 rounded-xl text-white transition-colors"
                     title="Create new subject"
                   >
                     +
@@ -305,12 +305,12 @@ const Notes: React.FC = () => {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">Content</label>
+                <label className="block text-sm font-medium text-neutral-300 mb-2">Content</label>
                 <textarea
                   value={content}
                   onChange={(e) => setContent(e.target.value)}
                   rows={8}
-                  className="w-full px-4 py-3 bg-white/5 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-[var(--color-primary)] resize-none"
+                  className="w-full px-4 py-3 bg-[#0a0a0a] border border-white/10 rounded-xl text-white placeholder-neutral-500 focus:outline-none focus:border-violet-500/50 focus:ring-2 focus:ring-violet-500/20 resize-none"
                   placeholder="Write your note content here..."
                   required
                 />
@@ -320,13 +320,13 @@ const Notes: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => setShowCreateForm(false)}
-                  className="px-6 py-3 border border-white/20 text-white rounded-lg hover:bg-white/10 transition-colors"
+                  className="px-6 py-3 border border-white/10 text-white rounded-xl hover:bg-white/5 transition-colors"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="px-6 py-3 bg-[var(--color-primary)] hover:bg-blue-600 text-white rounded-lg transition-colors"
+                  className="px-6 py-3 bg-gradient-to-r from-violet-600 to-cyan-500 text-white rounded-xl transition-all duration-300 shadow-lg shadow-violet-500/20 hover:shadow-violet-500/35"
                 >
                   Create Note
                 </button>
@@ -338,16 +338,16 @@ const Notes: React.FC = () => {
 
       {/* Create Subject Modal */}
       {showCreateSubject && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white/10 backdrop-blur-xl border border-white/20 rounded-2xl p-6 w-full max-w-md">
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="glass rounded-2xl p-6 w-full max-w-md">
             <div className="flex items-center justify-between mb-6">
-              <h2 className="text-xl font-bold text-white">Create New Subject</h2>
+              <h2 className="font-serif text-xl text-white">Create New Subject</h2>
               <button
                 onClick={() => {
                   setShowCreateSubject(false);
                   setNewSubjectName('');
                 }}
-                className="text-gray-400 hover:text-white transition-colors"
+                className="text-neutral-400 hover:text-white transition-colors"
               >
                 <X className="h-6 w-6" />
               </button>
@@ -355,13 +355,13 @@ const Notes: React.FC = () => {
 
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">Subject Name</label>
+                <label className="block text-sm font-medium text-neutral-300 mb-2">Subject Name</label>
                 <input
                   type="text"
                   value={newSubjectName}
                   onChange={(e) => setNewSubjectName(e.target.value)}
                   onKeyPress={(e) => e.key === 'Enter' && createSubject()}
-                  className="w-full px-4 py-3 bg-white/5 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-[var(--color-primary)]"
+                  className="w-full px-4 py-3 bg-[#0a0a0a] border border-white/10 rounded-xl text-white placeholder-neutral-500 focus:outline-none focus:border-violet-500/50 focus:ring-2 focus:ring-violet-500/20"
                   placeholder="e.g., Data Structures, Machine Learning..."
                   autoFocus
                 />
@@ -373,14 +373,14 @@ const Notes: React.FC = () => {
                     setShowCreateSubject(false);
                     setNewSubjectName('');
                   }}
-                  className="px-6 py-3 border border-white/20 text-white rounded-lg hover:bg-white/10 transition-colors"
+                  className="px-6 py-3 border border-white/10 text-white rounded-xl hover:bg-white/5 transition-colors"
                 >
                   Cancel
                 </button>
                 <button
                   onClick={createSubject}
                   disabled={creatingSubject}
-                  className="px-6 py-3 bg-[var(--color-primary)] hover:bg-blue-600 text-white rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="px-6 py-3 bg-gradient-to-r from-violet-600 to-cyan-500 text-white rounded-xl transition-all duration-300 shadow-lg shadow-violet-500/20 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {creatingSubject ? 'Creating...' : 'Create'}
                 </button>
@@ -395,12 +395,12 @@ const Notes: React.FC = () => {
         <div
           onDragOver={handleDragOver}
           onDrop={handleDrop}
-          className="border-2 border-dashed border-white/20 rounded-xl p-8 text-center hover:border-[var(--color-primary)] transition-colors cursor-pointer"
+          className="border-2 border-dashed border-white/10 rounded-2xl p-8 text-center hover:border-violet-500/40 transition-all duration-300 cursor-pointer hover:bg-white/[0.01]"
           onClick={() => fileInputRef.current?.click()}
         >
-          <Upload className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+          <Upload className="h-12 w-12 text-neutral-500 mx-auto mb-4" />
           <p className="text-white text-lg mb-2">Upload an image to extract text</p>
-          <p className="text-gray-400">Drag and drop an image here, or click to browse</p>
+          <p className="text-neutral-500 font-light">Drag and drop an image here, or click to browse</p>
           <input
             ref={fileInputRef}
             type="file"
@@ -412,22 +412,22 @@ const Notes: React.FC = () => {
 
         {uploadingImage && (
           <div className="mt-4 text-center">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[var(--color-primary)] mx-auto"></div>
-            <p className="text-gray-400 mt-2">Processing image...</p>
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-violet-500 mx-auto"></div>
+            <p className="text-neutral-400 mt-2">Processing image...</p>
           </div>
         )}
 
         {imageError && (
-          <div className="mt-4 bg-red-500/20 border border-red-500/50 rounded-xl p-4">
+          <div className="mt-4 bg-red-500/10 border border-red-500/30 rounded-xl p-4">
             <p className="text-red-300 text-sm">{imageError}</p>
           </div>
         )}
 
         {extractedText && (
-          <div className="mt-6 bg-white/5 backdrop-blur-xl border border-white/10 rounded-xl p-6">
-            <h3 className="text-lg font-semibold text-white mb-4">Extracted Text</h3>
-            <div className="bg-white/5 rounded-lg p-4 max-h-64 overflow-y-auto">
-              <pre className="text-gray-300 whitespace-pre-wrap text-sm">{extractedText}</pre>
+          <div className="mt-6 glass-card rounded-2xl p-6">
+            <h3 className="font-serif text-lg text-white mb-4">Extracted Text</h3>
+            <div className="bg-[#0a0a0a] rounded-xl p-4 max-h-64 overflow-y-auto border border-white/5">
+              <pre className="text-neutral-300 whitespace-pre-wrap text-sm">{extractedText}</pre>
             </div>
             <div className="flex justify-end mt-4">
               <button
@@ -436,7 +436,7 @@ const Notes: React.FC = () => {
                   setTitle('Extracted from Image');
                   setShowCreateForm(true);
                 }}
-                className="bg-[var(--color-primary)] hover:bg-blue-600 text-white px-4 py-2 rounded-lg transition-colors"
+                className="bg-gradient-to-r from-violet-600 to-cyan-500 text-white px-4 py-2 rounded-xl transition-all duration-300 shadow-lg shadow-violet-500/20"
               >
                 Use as Note
               </button>
@@ -451,17 +451,17 @@ const Notes: React.FC = () => {
           <Link
             key={note.id}
             to={`/notes/${note.id}`}
-            className="group bg-white/5 backdrop-blur-xl border border-white/10 rounded-xl p-6 hover:bg-white/10 transition-all duration-200 hover:scale-105 hover:shadow-lg"
+            className="group glass-card rounded-2xl p-6 hover:bg-white/[0.04] transition-all duration-500 hover:-translate-y-2 hover:shadow-[0_0_25px_-10px_rgba(139,92,246,0.3)] hover:border-violet-500/30"
           >
             <div className="flex items-start justify-between mb-4">
-              <div className="flex items-center space-x-2">
+              <div className="flex items-center space-x-2 text-violet-400">
                 {getSourceIcon(note.sourceType)}
-                <span className="text-xs text-gray-400 uppercase tracking-wide">
+                <span className="text-xs uppercase tracking-widest text-neutral-500">
                   {note.sourceType}
                 </span>
               </div>
               {note.subject && (
-                <div className="flex items-center space-x-1 text-xs text-gray-400">
+                <div className="flex items-center space-x-1 text-xs text-neutral-500">
                   <Tag className="h-3 w-3" />
                   <span>{note.subject.name}</span>
                 </div>
@@ -472,11 +472,11 @@ const Notes: React.FC = () => {
               {note.title || note.rawText.split('\n')[0] || 'Untitled Note'}
             </h3>
 
-            <p className="text-gray-400 text-sm line-clamp-3 mb-4">
+            <p className="text-neutral-500 text-sm line-clamp-3 mb-4 font-light">
               {note.rawText}
             </p>
 
-            <div className="flex items-center text-xs text-gray-500">
+            <div className="flex items-center text-xs text-neutral-600">
               <Calendar className="h-4 w-4 mr-1" />
               <span>{formatDate(note.createdAt)}</span>
             </div>
@@ -486,12 +486,12 @@ const Notes: React.FC = () => {
 
       {notes.length === 0 && (
         <div className="text-center py-12">
-          <FileText className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-          <h3 className="text-xl font-semibold text-white mb-2">No notes yet</h3>
-          <p className="text-gray-400 mb-6">Create your first note to get started</p>
+          <FileText className="h-16 w-16 text-neutral-600 mx-auto mb-4" />
+          <h3 className="font-serif text-xl text-white mb-2">No notes yet</h3>
+          <p className="text-neutral-500 mb-6 font-light">Create your first note to get started</p>
           <button
             onClick={() => setShowCreateForm(true)}
-            className="bg-[var(--color-primary)] hover:bg-blue-600 text-white px-6 py-3 rounded-xl transition-colors inline-flex items-center space-x-2"
+            className="bg-gradient-to-r from-violet-600 to-cyan-500 text-white px-6 py-3 rounded-xl transition-all duration-300 shadow-lg shadow-violet-500/20 inline-flex items-center space-x-2"
           >
             <Plus className="h-5 w-5" />
             <span>Create Note</span>

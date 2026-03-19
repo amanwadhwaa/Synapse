@@ -38,46 +38,37 @@ export default function ExamForm({ setExams }: ExamFormProps) {
   };
 
   return (
-    <form onSubmit={handleSubmit}>
-      <h3 className="text-lg font-semibold text-white mb-4">Add New Exam</h3>
+    <form onSubmit={handleSubmit} className="space-y-4">
+      <h3 className="font-serif text-lg text-white mb-4">Add New Exam</h3>
 
       <input
         type="text"
         placeholder="Subject"
         value={subject}
         onChange={(e) => setSubject(e.target.value)}
-        className="bg-slate-800 border border-slate-600 rounded-lg text-white px-4 py-2 w-full"
+        className="w-full rounded-xl border border-white/10 bg-[#0a0a0a] px-4 py-3 text-white placeholder:text-neutral-500 focus:outline-none focus:ring-2 focus:ring-violet-500/30 focus:border-violet-500/50"
       />
-
-      <br />
-      <br />
 
       <input
         type="date"
         value={examDate}
         onChange={(e) => setExamDate(e.target.value)}
-        className="bg-slate-800 border border-slate-600 rounded-lg text-white px-4 py-2 w-full"
+        className="w-full rounded-xl border border-white/10 bg-[#0a0a0a] px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-violet-500/30 focus:border-violet-500/50"
       />
-
-      <br />
-      <br />
 
       <select
         value={difficulty}
         onChange={(e) => setDifficulty(e.target.value)}
-        className="bg-slate-800 border border-slate-600 rounded-lg text-white px-4 py-2 w-full"
+        className="w-full rounded-xl border border-white/10 bg-[#0a0a0a] px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-violet-500/30 focus:border-violet-500/50"
       >
         <option value="easy">Easy</option>
         <option value="medium">Medium</option>
         <option value="hard">Hard</option>
       </select>
 
-      <br />
-      <br />
-
       <button
         type="submit"
-        className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg mt-3"
+        className="w-full bg-gradient-to-r from-violet-600 to-cyan-500 text-white px-4 py-2.5 rounded-xl font-semibold shadow-lg shadow-violet-500/20 hover:shadow-violet-500/35 transition-all duration-300 mt-2"
       >
         Add Exam
       </button>
