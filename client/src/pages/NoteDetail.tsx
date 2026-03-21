@@ -1,3 +1,4 @@
+import ReactMarkdown from "react-markdown";
 import React, { useState, useEffect, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import {
@@ -204,7 +205,7 @@ const NoteDetail: React.FC = () => {
 
     try {
       const response = await chatWithNote(id, trimmedMessage, historyForRequest);
-
+      console.log(response.result);  
       const assistantMessage: ChatMessage = {
         id: `assistant-${Date.now()}`,
         role: "assistant",
@@ -329,7 +330,7 @@ const NoteDetail: React.FC = () => {
           <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-xl p-6">
             <h2 className="text-2xl font-bold text-white mb-4">Note Content</h2>
             <div className="prose prose-invert max-w-none">
-              <pre className="text-gray-300 whitespace-pre-wrap leading-relaxed">
+              <pre className="text-gray-300 leading-relaxed">
                 {note.rawText}
               </pre>
             </div>
@@ -381,13 +382,27 @@ const NoteDetail: React.FC = () => {
                   className={`flex ${message.role === "user" ? "justify-end" : "justify-start"}`}
                 >
                   <div
-                    className={`max-w-[85%] rounded-2xl px-4 py-3 text-sm leading-relaxed ${
+                    className={`max-w-[85%] rounded-2xl px-4 py-3 text-sm leading-relaxed whitespace-pre-wrap ${
                       message.role === "user"
                         ? "bg-gradient-to-r from-blue-600 to-cyan-500 text-white"
                         : "bg-slate-900/80 border border-white/10 text-gray-200"
                     }`}
                   >
-                    {message.content}
+                    {message.role === "user" ? (
+                      message.content
+                    ) : (
+                      <ReactMarkdown
+                        components={{
+                          p: ({ children }) => <p className="mb-2 last:mb-0">{children}</p>,
+                          strong: ({ children }) => <strong className="font-bold text-white">{children}</strong>,
+                          ol: ({ children }) => <ol className="list-decimal ml-4 space-y-1 mb-2">{children}</ol>,
+                          ul: ({ children }) => <ul className="list-disc ml-4 space-y-1 mb-2">{children}</ul>,
+                          code: ({ children }) => <code className="bg-white/10 px-1 py-0.5 rounded text-xs font-mono">{children}</code>,
+                        }}
+                      >
+                        {message.content.replace(/(\d+\..+)\n\n(\d+\.)/g, '$1\n$2')}
+                      </ReactMarkdown>
+                    )}
                   </div>
                 </div>
               ))}

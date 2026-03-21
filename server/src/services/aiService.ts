@@ -261,7 +261,7 @@ export async function chatWithNotes(
     messages: [
       {
         role: "system",
-        content: `You are a helpful study assistant. The student is studying the following notes: ${sanitizedNote}. Answer their questions clearly and helpfully based on these notes and your knowledge.`,
+        content: `You are a helpful study assistant. The student is studying the following notes: ${sanitizedNote}. Answer their questions clearly and helpfully based on these notes and your knowledge. IMPORTANT formatting rules: Use markdown. For numbered lists, do NOT add blank lines between items - keep them tightly together. Use **bold** for key terms.`,
       },
       ...historyMessages,
       {
