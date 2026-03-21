@@ -15,13 +15,13 @@ const router = express.Router();
 
 router.post("/simplify", authMiddleware, async (req: AuthRequest, res) => {
   try {
-    const { content } = req.body;
+    const { content, level } = req.body;
 
     if (!content) {
       return res.status(400).json({ error: "Content required" });
     }
 
-    const result = await simplifyText(content);
+    const result = await simplifyText(content, level || 3);
 
     res.json({ result });
   } catch (error) {
@@ -32,13 +32,13 @@ router.post("/simplify", authMiddleware, async (req: AuthRequest, res) => {
 
 router.post("/summarize", authMiddleware, async (req: AuthRequest, res) => {
   try {
-    const { content } = req.body;
+    const { content, level } = req.body;
 
     if (!content) {
       return res.status(400).json({ error: "Content required" });
     }
 
-    const result = await summarizeText(content);
+    const result = await summarizeText(content, level || 3);
 
     res.json({ result });
   } catch (error) {
@@ -49,9 +49,10 @@ router.post("/summarize", authMiddleware, async (req: AuthRequest, res) => {
 
 router.post("/generate-quiz", authMiddleware, async (req: AuthRequest, res) => {
   try {
-    const { noteId, content } = req.body as {
+    const { noteId, content, level } = req.body as {
       noteId?: string;
       content?: string;
+      level?: number;
     };
 
     if (!noteId) {
@@ -74,7 +75,7 @@ router.post("/generate-quiz", authMiddleware, async (req: AuthRequest, res) => {
       return res.status(404).json({ error: "Note not found" });
     }
 
-    const questions = await generateQuizQuestions(content || note.rawText);
+    const questions = await generateQuizQuestions(content || note.rawText, level || 3);
 
     const quiz = await prisma.quiz.create({
       data: {

@@ -38,14 +38,24 @@ async function callAI(prompt: string) {
   return completion.choices[0].message.content || "No response";
 }
 
-export async function simplifyText(text: string) {
+export async function simplifyText(text: string, level: number = 3) {
   const cleaned = cleanOCR(trimText(text));
+
+  const levelDescriptions = {
+    1: "5 year old (very simple, no jargon, use analogies and fun language)",
+    2: "Middle school student (basic concepts, simple words)",
+    3: "High school student (moderate complexity, some technical terms)",
+    4: "University student (technical language, assumes domain knowledge)",
+    5: "PhD graduate (expert level, full technical depth, academic tone)"
+  };
+
+  const levelPrompt = levelDescriptions[level as keyof typeof levelDescriptions] || levelDescriptions[3];
 
   const prompt = `
   The following text was extracted from an image and may contain formatting errors.
 You are an expert tutor helping a student understand difficult study notes.
 
-Rewrite the following notes in simpler language.
+Rewrite the following notes in simpler language for a ${levelPrompt}.
 
 Instructions:
 - Keep the key technical terms.
@@ -61,18 +71,28 @@ ${cleaned}
   return callAI(prompt);
 }
 
-export async function summarizeText(text: string) {
+export async function summarizeText(text: string, level: number = 3) {
   const cleaned = cleanOCR(trimText(text));
+
+  const levelDescriptions = {
+    1: "very basic, simple words, minimal details",
+    2: "basic concepts, short summary",
+    3: "moderate detail, key ideas",
+    4: "detailed, technical terms included",
+    5: "comprehensive, full depth, academic style"
+  };
+
+  const levelPrompt = levelDescriptions[level as keyof typeof levelDescriptions] || levelDescriptions[3];
 
   const prompt = `
   The following text was extracted from an image and may contain formatting errors.
 You are summarizing study notes for exam revision.
 
-Extract the most important concepts.
+Extract the most important concepts in a ${levelPrompt} style.
 
 Rules:
-- Maximum 6 bullet points
-- Each bullet must be under 20 words
+- Maximum ${level === 1 ? 3 : level === 2 ? 4 : level === 3 ? 6 : level === 4 ? 8 : 10} bullet points
+- Each bullet must be under ${level === 1 ? 15 : level === 2 ? 18 : level === 3 ? 20 : level === 4 ? 25 : 30} words
 - Focus only on key ideas
 - Avoid repeating similar points
 
@@ -180,8 +200,19 @@ function extractJsonArray(text: string): unknown {
 
 export async function generateQuizQuestions(
   text: string,
+  level: number = 3,
 ): Promise<GeneratedQuizQuestion[]> {
   const cleaned = cleanOCR(trimText(text, 7000));
+
+  const levelDescriptions = {
+    1: "very simple, basic concepts, easy vocabulary",
+    2: "basic, straightforward questions",
+    3: "moderate difficulty, some reasoning required",
+    4: "challenging, requires understanding and application",
+    5: "expert level, complex analysis and synthesis"
+  };
+
+  const levelPrompt = levelDescriptions[level as keyof typeof levelDescriptions] || levelDescriptions[3];
 
   const completion = await azureOpenAIClient.chat.completions.create({
     model: azureOpenAIModel,
@@ -193,7 +224,7 @@ export async function generateQuizQuestions(
       },
       {
         role: "user",
-        content: `Create exactly 5 multiple-choice questions from the notes below.
+        content: `Create exactly 5 multiple-choice questions from the notes below at a ${levelPrompt} difficulty level.
 
 Return ONLY valid JSON as an array with this exact schema:
 [
