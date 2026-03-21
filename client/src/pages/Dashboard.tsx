@@ -20,6 +20,7 @@ function Dashboard() {
   const handleStartSession = async (payload: {
     subjectId: string | null;
     durationMinutes: number;
+    subjectName: string;
   }) => {
     setIsStartModalOpen(false);
 
@@ -33,7 +34,7 @@ function Dashboard() {
       console.error("Failed to log study session", error);
     }
 
-    navigate(`/study-session?time=${payload.durationMinutes}`);
+    navigate(`/study-session?time=${payload.durationMinutes}&subject=${payload.subjectId}&subjectName=${encodeURIComponent(payload.subjectName)}`);
   };
 
   return (
