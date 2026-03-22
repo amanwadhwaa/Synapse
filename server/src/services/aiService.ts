@@ -24,7 +24,7 @@ export interface GeneratedQuizQuestion {
   explanation: string;
 }
 
-async function callAI(prompt: string) {
+export async function callAI(prompt: string) {
   const completion = await azureOpenAIClient.chat.completions.create({
     model: azureOpenAIModel,
     messages: [

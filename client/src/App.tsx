@@ -20,11 +20,7 @@ import StudySession from "./pages/StudySession";
 import Profile from "./pages/Profile";
 import Quizzes from "./pages/Quizzes";
 import QuizAttempt from "./pages/QuizAttempt";
-const Performance = () => (
-  <div className="p-6">
-    <h1 className="text-2xl font-bold text-white">Performance</h1>
-  </div>
-);
+import Performance from "./pages/Performance";
 
 // Basic auth pages (will be enhanced later)
 const Login = () => {
