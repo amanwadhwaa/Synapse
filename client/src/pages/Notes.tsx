@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Link } from 'react-router-dom';
-import { Plus, FileText, Image, Mic, Calendar, Tag, Upload, X, File as FileIcon } from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
+import { Plus, FileText, Image, Calendar, Tag, Upload, X, File as FileIcon, Trash2 } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 interface Note {
@@ -12,6 +12,8 @@ interface Note {
   extractedText?: string;
   sourceType: 'TYPED' | 'IMAGE' | 'AUDIO' | 'PDF';
   fileUrl?: string;
+  originalFileName?: string;
+  pageCount?: number | null;
   createdAt: string;
   title?: string;
 }
@@ -22,12 +24,12 @@ interface Subject {
 }
 
 const Notes: React.FC = () => {
+  const navigate = useNavigate();
   const [notes, setNotes] = useState<Note[]>([]);
   const [subjects, setSubjects] = useState<Subject[]>([]);
   const [loading, setLoading] = useState(true);
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [uploadingFile, setUploadingFile] = useState(false);
-  const [extractedText, setExtractedText] = useState('');
   const [imageError, setImageError] = useState('');
   const [selectedUploadFile, setSelectedUploadFile] = useState<File | null>(null);
   const [imagePreviewUrl, setImagePreviewUrl] = useState<string | null>(null);
@@ -35,6 +37,8 @@ const Notes: React.FC = () => {
   const [showCreateSubject, setShowCreateSubject] = useState(false);
   const [newSubjectName, setNewSubjectName] = useState('');
   const [creatingSubject, setCreatingSubject] = useState(false);
+  const [noteToDelete, setNoteToDelete] = useState<Note | null>(null);
+  const [deletingNote, setDeletingNote] = useState(false);
 
   // Form states
   const [title, setTitle] = useState('');
@@ -164,8 +168,8 @@ const Notes: React.FC = () => {
     const isPdf = file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf');
 
     setUploadingFile(true);
-    setExtractedText('');
     setImageError('');
+    const toastId = toast.loading('Processing your file with AI...');
 
     const formData = new FormData();
     formData.append(isPdf ? 'pdf' : 'image', file);
@@ -181,23 +185,33 @@ const Notes: React.FC = () => {
 
       if (response.ok) {
         const data = await response.json();
-        setExtractedText(data.extractedText || `No text extracted from ${isPdf ? 'PDF' : 'image'}`);
 
-        if (isPdf) {
-          fetchNotes();
+        toast.success('Note created successfully!', { id: toastId });
+        setSelectedUploadFile(null);
+        if (imagePreviewUrl) {
+          URL.revokeObjectURL(imagePreviewUrl);
+          setImagePreviewUrl(null);
+        }
+        if (fileInputRef.current) {
+          fileInputRef.current.value = '';
         }
 
-        toast.success(`${isPdf ? 'PDF' : 'Image'} processed successfully!`);
+        if (data?.note?.id) {
+          navigate(`/notes/${data.note.id}`);
+        } else {
+          await fetchNotes();
+          navigate('/notes');
+        }
       } else {
         const errorData = await response.json();
         const errorMsg = errorData.error || `Failed to process ${isPdf ? 'PDF' : 'image'}`;
         setImageError(errorMsg);
-        toast.error(errorMsg);
+        toast.error(errorMsg, { id: toastId });
       }
     } catch (error) {
       const errorMsg = error instanceof Error ? error.message : `Failed to upload ${isPdf ? 'PDF' : 'image'}`;
       setImageError(errorMsg);
-      toast.error(errorMsg);
+      toast.error(errorMsg, { id: toastId });
     } finally {
       setUploadingFile(false);
     }
@@ -240,6 +254,34 @@ const Notes: React.FC = () => {
     }
   };
 
+  const handleDeleteNote = async () => {
+    if (!noteToDelete || deletingNote) return;
+
+    setDeletingNote(true);
+    try {
+      const response = await fetch(`/api/notes/${noteToDelete.id}`, {
+        method: 'DELETE',
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem('token')}`,
+        },
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || 'Failed to delete note');
+      }
+
+      setNotes((prev) => prev.filter((note) => note.id !== noteToDelete.id));
+      setNoteToDelete(null);
+      toast.success('Note deleted successfully');
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Failed to delete note';
+      toast.error(message);
+    } finally {
+      setDeletingNote(false);
+    }
+  };
+
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-US', {
       year: 'numeric',
@@ -248,19 +290,36 @@ const Notes: React.FC = () => {
     });
   };
 
-  const getSourceIcon = (sourceType: string) => {
-    switch (sourceType) {
-      case 'TYPED':
-        return <FileText className="h-4 w-4" />;
-      case 'IMAGE':
-        return <Image className="h-4 w-4" />;
-      case 'AUDIO':
-        return <Mic className="h-4 w-4" />;
-      case 'PDF':
-        return <FileIcon className="h-4 w-4" />;
-      default:
-        return <FileText className="h-4 w-4" />;
+  const sortedNotes = [...notes].sort(
+    (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+  );
+
+  const getNoteDescription = (note: Note) => {
+    if (note.sourceType === 'IMAGE') {
+      return 'Image note - AI analyzed';
     }
+
+    if (note.sourceType === 'PDF') {
+      const fileName = note.originalFileName || note.title || 'Document';
+      return `${fileName} - PDF note - AI analyzed`;
+    }
+
+    if (note.sourceType === 'TYPED') {
+      const content = (note.rawText || '').replace(/\s+/g, ' ').trim();
+      return content.length > 60 ? `${content.slice(0, 60)}...` : content || 'Typed note';
+    }
+
+    return 'Audio note';
+  };
+
+  const getTypeIconMeta = (sourceType: Note['sourceType']) => {
+    if (sourceType === 'IMAGE') {
+      return { emoji: '📷', bgClass: 'bg-blue-500/20 text-blue-200 border-blue-400/30' };
+    }
+    if (sourceType === 'PDF') {
+      return { emoji: '📄', bgClass: 'bg-red-500/20 text-red-200 border-red-400/30' };
+    }
+    return { emoji: '✏️', bgClass: 'bg-emerald-500/20 text-emerald-200 border-emerald-400/30' };
   };
 
   if (loading) {
@@ -478,7 +537,7 @@ const Notes: React.FC = () => {
         {uploadingFile && (
           <div className="mt-4 text-center">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[var(--color-primary)] mx-auto"></div>
-            <p className="text-gray-400 mt-2">Processing file...</p>
+            <p className="text-gray-400 mt-2">Processing your file with AI...</p>
           </div>
         )}
 
@@ -487,73 +546,97 @@ const Notes: React.FC = () => {
             <p className="text-red-300 text-sm">{imageError}</p>
           </div>
         )}
+      </div>
 
-        {extractedText && (
-          <div className="mt-6 bg-white/5 backdrop-blur-xl border border-white/10 rounded-xl p-6">
-            <h3 className="text-lg font-semibold text-white mb-4">Extracted Text</h3>
-            <div className="bg-white/5 rounded-lg p-4 max-h-64 overflow-y-auto">
-              <pre className="text-gray-300 whitespace-pre-wrap text-sm">{extractedText}</pre>
-            </div>
-            <div className="flex justify-end mt-4">
-              <button
-                onClick={() => {
-                  setContent(extractedText);
-                  setTitle(selectedUploadFile?.type === 'application/pdf' ? 'Extracted from PDF' : 'Extracted from Image');
-                  setShowCreateForm(true);
-                }}
-                className="bg-[var(--color-primary)] hover:bg-blue-600 text-white px-4 py-2 rounded-lg transition-colors"
+      {/* Notes List */}
+      <div className="space-y-3">
+        {sortedNotes.map((note) => {
+          const iconMeta = getTypeIconMeta(note.sourceType);
+
+          return (
+          <div
+            key={note.id}
+            className="group relative flex items-center justify-between gap-4 rounded-xl border border-white/10 bg-white/5 px-4 py-4 transition-all duration-200 hover:-translate-y-0.5 hover:border-white/20 hover:bg-white/10"
+          >
+            <span className="absolute left-0 top-2 bottom-2 w-1 rounded-r bg-blue-500 opacity-0 transition-opacity duration-200 group-hover:opacity-100"></span>
+
+            <Link to={`/notes/${note.id}`} className="flex min-w-0 flex-1 items-center gap-4">
+              <div className={`h-12 w-12 shrink-0 rounded-lg border flex items-center justify-center text-xl ${iconMeta.bgClass}`}>
+                <span aria-hidden="true">{iconMeta.emoji}</span>
+              </div>
+
+              <div className="min-w-0">
+                <div className="flex flex-wrap items-center gap-2">
+                  <h3 className="text-white font-semibold text-base truncate">
+                    {note.title || note.originalFileName || 'Untitled Note'}
+                  </h3>
+                  <span className="inline-flex items-center rounded-full border border-white/15 bg-white/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-gray-200">
+                    {note.sourceType}
+                  </span>
+                  {note.subject && (
+                    <span className="inline-flex items-center gap-1 text-[11px] text-gray-400">
+                      <Tag className="h-3 w-3" />
+                      <span className="truncate max-w-28">{note.subject.name}</span>
+                    </span>
+                  )}
+                </div>
+                <p className="mt-1 text-sm text-gray-400 truncate">{getNoteDescription(note)}</p>
+              </div>
+            </Link>
+
+            <div className="shrink-0 flex items-center gap-4">
+              <div className="hidden sm:flex items-center text-xs text-gray-500">
+                <Calendar className="h-4 w-4 mr-1" />
+                <span>{formatDate(note.createdAt)}</span>
+              </div>
+              <Link
+                to={`/notes/${note.id}`}
+                className="inline-flex items-center rounded-lg border border-blue-400/30 bg-blue-500/15 px-3 py-1.5 text-xs font-semibold text-blue-200 group-hover:bg-blue-500/25 transition-colors"
               >
-                Use as Note
+                Open
+              </Link>
+              <button
+                type="button"
+                onClick={() => setNoteToDelete(note)}
+                className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-red-500/30 bg-red-500/10 text-red-300 opacity-30 group-hover:opacity-100 transition-all hover:bg-red-500/20"
+                aria-label="Delete note"
+              >
+                <Trash2 className="h-4 w-4" />
               </button>
             </div>
           </div>
-        )}
+          );
+        })}
       </div>
 
-      {/* Notes Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {notes.map((note) => (
-          <Link
-            key={note.id}
-            to={`/notes/${note.id}`}
-            className="group bg-white/5 backdrop-blur-xl border border-white/10 rounded-xl p-6 hover:bg-white/10 transition-all duration-200 hover:scale-105 hover:shadow-lg"
-          >
-            <div className="flex items-start justify-between mb-4">
-              <div className="flex items-center space-x-2">
-                {getSourceIcon(note.sourceType)}
-                <span className="text-xs text-gray-400 uppercase tracking-wide">
-                  {note.sourceType}
-                </span>
-                {note.sourceType === 'PDF' && (
-                  <span className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold bg-red-500/20 text-red-200 border border-red-400/30">
-                    <FileIcon className="h-3 w-3" />
-                    PDF
-                  </span>
-                )}
-              </div>
-              {note.subject && (
-                <div className="flex items-center space-x-1 text-xs text-gray-400">
-                  <Tag className="h-3 w-3" />
-                  <span>{note.subject.name}</span>
-                </div>
-              )}
-            </div>
-
-            <h3 className="text-lg font-semibold text-white mb-2 line-clamp-2">
-              {note.title || note.rawText.split('\n')[0] || 'Untitled Note'}
-            </h3>
-
-            <p className="text-gray-400 text-sm line-clamp-3 mb-4">
-              {note.rawText}
+      {noteToDelete && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
+          <div className="w-full max-w-md rounded-2xl border border-white/20 bg-slate-900 p-6">
+            <h3 className="text-lg font-semibold text-white mb-3">Delete Note</h3>
+            <p className="text-sm text-gray-300 mb-6">
+              Are you sure you want to delete this note? This will also delete all quizzes and chat history associated with it.
             </p>
-
-            <div className="flex items-center text-xs text-gray-500">
-              <Calendar className="h-4 w-4 mr-1" />
-              <span>{formatDate(note.createdAt)}</span>
+            <div className="flex justify-end gap-3">
+              <button
+                type="button"
+                onClick={() => setNoteToDelete(null)}
+                disabled={deletingNote}
+                className="px-4 py-2 rounded-lg border border-white/20 text-white hover:bg-white/10 transition-colors disabled:opacity-50"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleDeleteNote}
+                disabled={deletingNote}
+                className="px-4 py-2 rounded-lg bg-red-600 text-white hover:bg-red-500 transition-colors disabled:opacity-50"
+              >
+                {deletingNote ? 'Deleting...' : 'Confirm Delete'}
+              </button>
             </div>
-          </Link>
-        ))}
-      </div>
+          </div>
+        </div>
+      )}
 
       {notes.length === 0 && (
         <div className="text-center py-12">

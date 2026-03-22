@@ -10,7 +10,7 @@ interface Subject {
 interface StartSessionModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onStart: (payload: { subjectId: string | null; durationMinutes: number }) => void;
+  onStart: (payload: { subjectId: string | null; durationMinutes: number; subjectName: string }) => void;
 }
 
 const DURATION_PRESETS = [25, 45, 60, 90] as const;
@@ -78,9 +78,13 @@ export default function StartSessionModal({
       return;
     }
 
+    const selectedSubject = subjects.find((s) => s.id === subjectId);
+    const subjectName = selectedSubject?.name || "General Study";
+
     onStart({
       subjectId: subjectId || null,
       durationMinutes: resolvedDuration,
+      subjectName: subjectName,
     });
   };
 

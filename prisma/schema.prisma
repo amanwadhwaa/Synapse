@@ -45,8 +45,23 @@ model Note {
   extractedText String?
   sourceType    String
   fileUrl       String?
+  originalFileName String?
+  pageCount     Int?
   quizzes       Quiz[]
+  chatMessages  ChatMessage[]
   createdAt     DateTime  @default(now())
+}
+
+model ChatMessage {
+  id        String   @id @default(cuid())
+  noteId    String
+  note      Note     @relation(fields: [noteId], references: [id], onDelete: Cascade)
+  userId    String
+  role      String
+  content   String
+  createdAt DateTime @default(now())
+
+  @@index([noteId, createdAt])
 }
 
 model Quiz {

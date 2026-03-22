@@ -11,9 +11,9 @@
     "prisma:studio": "prisma studio"
   },
   "dependencies": {
-    "@azure/cognitiveservices-computervision": "^8.2.0",
-    "@azure/ms-rest-js": "^2.7.0",
+    "@azure/storage-blob": "^12.31.0",
     "@google/generative-ai": "^0.24.1",
+    "@prisma/client": "^7.5.0",
     "bcrypt": "^6.0.0",
     "cors": "^2.8.6",
     "dotenv": "^17.3.1",
@@ -22,11 +22,12 @@
     "jsonwebtoken": "^9.0.3",
     "morgan": "^1.10.1",
     "multer": "^2.1.1",
+    "openai": "^6.32.0",
     "pdf-parse": "^2.4.5",
+    "pdf-to-img": "^5.0.0",
     "synapse-shared": "file:../shared"
   },
   "devDependencies": {
-    "@prisma/client": "^5.22.0",
     "@types/bcrypt": "^6.0.0",
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.6",
@@ -38,5 +39,8 @@
     "prisma": "^5.22.0",
     "ts-node": "^10.9.2",
     "typescript": "^5.9.3"
+  },
+  "overrides": {
+    "pdfjs-dist": "5.4.296"
   }
 }

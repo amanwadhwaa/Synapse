@@ -5,6 +5,13 @@ export interface ChatMessagePayload {
   content: string;
 }
 
+export interface PersistedChatMessage extends ChatMessagePayload {
+  id: string;
+  createdAt: string;
+  noteId: string;
+  userId: string;
+}
+
 export async function simplifyNote(noteId: string, content: string) {
   return apiRequest("/ai/simplify", "POST", { noteId, content });
 }
@@ -20,11 +27,18 @@ export async function generateQuiz(noteId: string, content: string) {
 export async function chatWithNote(
   noteId: string,
   message: string,
-  conversationHistory: ChatMessagePayload[],
 ) {
-  return apiRequest("/ai/chat", "POST", {
-    noteId,
+  return apiRequest(`/chat/${noteId}`, "POST", {
     message,
-    conversationHistory,
   });
+}
+
+export async function getChatHistory(noteId: string) {
+  return apiRequest(`/chat/${noteId}`, "GET") as Promise<{
+    messages: PersistedChatMessage[];
+  }>;
+}
+
+export async function clearChatHistory(noteId: string) {
+  return apiRequest(`/chat/${noteId}`, "DELETE") as Promise<{ success: boolean }>;
 }

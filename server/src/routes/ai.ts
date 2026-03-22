@@ -7,6 +7,7 @@ import {
   summarizeText,
   generateQuizQuestions,
   chatWithNotes,
+  speakText,
   ChatMessage,
 } from "../services/aiService";
 
@@ -133,6 +134,23 @@ router.post("/chat", authMiddleware, async (req: AuthRequest, res) => {
   } catch (error) {
     console.error("CHAT ERROR:", error);
     res.status(500).json({ error: "Failed to generate chat response" });
+  }
+});
+
+router.post("/speak", authMiddleware, async (req: AuthRequest, res) => {
+  try {
+    const { content } = req.body;
+
+    if (!content) {
+      return res.status(400).json({ error: "Content required" });
+    }
+
+    const result = await speakText(content);
+
+    res.json({ result });
+  } catch (error) {
+    console.error("SPEAK ERROR:", error);
+    res.status(500).json({ error: "Failed to generate speech text" });
   }
 });
 

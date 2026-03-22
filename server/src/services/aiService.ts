@@ -1,9 +1,4 @@
-import OpenAI from "openai";
-
-const client = new OpenAI({
-  apiKey: process.env.GROQ_API_KEY,
-  baseURL: "https://api.groq.com/openai/v1",
-});
+import { azureOpenAIClient, azureOpenAIModel } from "./azureOpenAI";
 
 function trimText(text: string, maxChars = 4000) {
   if (text.length <= maxChars) return text;
@@ -30,8 +25,8 @@ export interface GeneratedQuizQuestion {
 }
 
 async function callAI(prompt: string) {
-  const completion = await client.chat.completions.create({
-    model: "llama-3.3-70b-versatile",
+  const completion = await azureOpenAIClient.chat.completions.create({
+    model: azureOpenAIModel,
     messages: [
       {
         role: "user",
@@ -188,8 +183,8 @@ export async function generateQuizQuestions(
 ): Promise<GeneratedQuizQuestion[]> {
   const cleaned = cleanOCR(trimText(text, 7000));
 
-  const completion = await client.chat.completions.create({
-    model: "llama-3.3-70b-versatile",
+  const completion = await azureOpenAIClient.chat.completions.create({
+    model: azureOpenAIModel,
     messages: [
       {
         role: "system",
@@ -256,8 +251,8 @@ export async function chatWithNotes(
       content: entry.content.trim(),
     }));
 
-  const completion = await client.chat.completions.create({
-    model: "llama-3.3-70b-versatile",
+  const completion = await azureOpenAIClient.chat.completions.create({
+    model: azureOpenAIModel,
     messages: [
       {
         role: "system",
@@ -272,4 +267,25 @@ export async function chatWithNotes(
   });
 
   return completion.choices[0].message.content || "I could not generate a response.";
+}
+
+export async function speakText(text: string) {
+  const cleaned = cleanOCR(trimText(text, 7000));
+
+  const completion = await azureOpenAIClient.chat.completions.create({
+    model: azureOpenAIModel,
+    messages: [
+      {
+        role: "system",
+        content:
+          "You are a clear and concise study narrator. Rewrite text into a natural spoken script suitable for text-to-speech.",
+      },
+      {
+        role: "user",
+        content: `Convert the following study content into spoken narration while preserving meaning:\n\n${cleaned}`,
+      },
+    ],
+  });
+
+  return completion.choices[0].message.content || "I could not generate a spoken response.";
 }

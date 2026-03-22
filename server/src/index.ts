@@ -10,6 +10,7 @@ import subjectsRoutes from "./routes/subjects";
 import sessionsRoutes from "./routes/sessions";
 import imageRoutes from "./routes/image";
 import aiRoutes from "./routes/ai";
+import chatRoutes from "./routes/chat";
 import studyPlanRoutes from "./routes/studyPlan";
 import examsRoutes from "./routes/exam";
 import quizzesRoutes from "./routes/quizzes";
@@ -43,8 +44,10 @@ app.use("/api/subjects", subjectsRoutes);
 app.use("/api/sessions", sessionsRoutes);
 app.use("/api/notes", imageRoutes); // Mount image routes under /api/notes
 app.use("/api/ai", aiRoutes);
+app.use("/api/chat", chatRoutes);
 app.use("/api/quizzes", quizzesRoutes);
 app.use("/api/study-plan", studyPlanRoutes);
+app.use("/api/plan", studyPlanRoutes);
 app.use("/api/exams", examsRoutes);
 
 app.get("/api/health", (req, res) => {

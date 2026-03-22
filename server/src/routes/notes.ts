@@ -2,8 +2,42 @@ import express from "express";
 import multer from "multer";
 import prisma from "../prisma";
 import { AuthRequest, authMiddleware } from "../middleware/auth";
-
+import { extractNotesFromImageBase64 } from "../services/noteVision";
+import { uploadBufferToAzureBlob } from "../services/fileStorage";
 const { PDFParse } = require("pdf-parse");
+
+const convertPdfToPageImages = async (buffer: Buffer) => {
+  const { pdf } = await import("pdf-to-img");
+  const pdfDataUrl = `data:application/pdf;base64,${buffer.toString("base64")}`;
+  const document = await pdf(pdfDataUrl, { scale: 2.5 });
+  const images: Array<{ pageNumber: number; base64: string; mimeType: string }> = [];
+
+  let pageNumber = 1;
+  for await (const image of document as AsyncIterable<Uint8Array | Buffer>) {
+    const imageBuffer = Buffer.isBuffer(image) ? image : Buffer.from(image);
+    images.push({
+      pageNumber,
+      base64: imageBuffer.toString("base64"),
+      mimeType: "image/png",
+    });
+    pageNumber += 1;
+  }
+
+  return images;
+};
+
+const extractPdfTextWithFallback = async (buffer: Buffer) => {
+  // Use pdf-parse's public worker export so API and worker stay in lockstep.
+  const { getPath } = require("pdf-parse/worker") as { getPath: () => string };
+  PDFParse.setWorker(getPath());
+  const parser = new PDFParse({ data: buffer });
+  try {
+    const data = await parser.getText();
+    return (data.text || "").trim();
+  } finally {
+    await parser.destroy();
+  }
+};
 
 const router = express.Router();
 
@@ -78,30 +112,65 @@ router.post(
         return res.status(400).json({ error: "No PDF file provided" });
       }
 
-      const parser = new PDFParse({ data: req.file.buffer });
-      const data = await parser.getText();
-      const extractedText = (data.text || "").trim();
-      await parser.destroy();
+      const originalName = req.file.originalname || "Uploaded PDF";
+      const fileUrl = await uploadBufferToAzureBlob({
+        buffer: req.file.buffer,
+        mimeType: req.file.mimetype || "application/pdf",
+        userId: req.user!.id,
+        originalFileName: originalName,
+        folder: "pdfs",
+      });
+
+      let extractedText = "";
+      let extractionMode: "gpt-4o-vision" | "pdf-parse-fallback" = "gpt-4o-vision";
+      let pageCount: number | null = null;
+
+      try {
+        const pageImages = await convertPdfToPageImages(req.file.buffer);
+        pageCount = pageImages.length;
+
+        if (!pageImages.length) {
+          throw new Error("No pages could be extracted from this PDF");
+        }
+
+        const pageResults: string[] = [];
+
+        for (const pageImage of pageImages) {
+          const pageText = await extractNotesFromImageBase64({
+            base64: pageImage.base64,
+            mimeType: pageImage.mimeType,
+          });
+
+          pageResults.push(`Page ${pageImage.pageNumber}\n${pageText}`.trim());
+        }
+
+        extractedText = pageResults.join("\n\n").trim();
+      } catch (visionError) {
+        console.error("PDF vision extraction failed, using pdf-parse fallback:", visionError);
+        extractedText = await extractPdfTextWithFallback(req.file.buffer);
+        extractionMode = "pdf-parse-fallback";
+      }
 
       if (!extractedText) {
         return res.status(400).json({ error: "No text could be extracted from this PDF" });
       }
 
-      const originalName = req.file.originalname || "Uploaded PDF";
-      const title = originalName.replace(/\.pdf$/i, "") || "Uploaded PDF";
-
       const note = await prisma.note.create({
         data: {
           userId: req.user!.id,
-          title,
+          title: originalName,
           rawText: extractedText,
           extractedText,
           sourceType: "PDF",
+          fileUrl,
+          originalFileName: originalName,
+          pageCount,
         },
       });
 
       res.json({
         extractedText,
+        extractionMode,
         note,
       });
     } catch (error) {
@@ -135,10 +204,65 @@ router.get("/:id", authMiddleware, async (req: AuthRequest, res) => {
 // DELETE NOTE
 router.delete("/:id", authMiddleware, async (req: AuthRequest, res) => {
   try {
-    await prisma.note.delete({
+    const noteId = req.params.id as string;
+
+    const note = await prisma.note.findFirst({
       where: {
-        id: req.params.id as string,
+        id: noteId,
+        userId: req.user!.id,
       },
+      select: {
+        id: true,
+      },
+    });
+
+    if (!note) {
+      return res.status(404).json({ error: "Note not found" });
+    }
+
+    await prisma.$transaction(async (tx) => {
+      const quizzes = await tx.quiz.findMany({
+        where: {
+          noteId,
+          userId: req.user!.id,
+        },
+        select: {
+          id: true,
+        },
+      });
+
+      const quizIds = quizzes.map((quiz) => quiz.id);
+
+      if (quizIds.length > 0) {
+        await tx.quizAttempt.deleteMany({
+          where: {
+            quizId: {
+              in: quizIds,
+            },
+            userId: req.user!.id,
+          },
+        });
+      }
+
+      await tx.quiz.deleteMany({
+        where: {
+          noteId,
+          userId: req.user!.id,
+        },
+      });
+
+      await tx.chatMessage.deleteMany({
+        where: {
+          noteId,
+          userId: req.user!.id,
+        },
+      });
+
+      await tx.note.delete({
+        where: {
+          id: noteId,
+        },
+      });
     });
 
     res.json({ success: true });

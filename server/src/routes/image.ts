@@ -1,6 +1,9 @@
 import express from 'express';
 import multer from 'multer';
 import { AuthRequest, authMiddleware } from '../middleware/auth';
+import { extractNotesFromImageBase64 } from '../services/noteVision';
+import prisma from '../prisma';
+import { uploadBufferToAzureBlob } from '../services/fileStorage';
 
 const router = express.Router();
 
@@ -22,97 +25,35 @@ router.post('/upload-image', authMiddleware, upload.single('image'), async (req:
       return res.status(400).json({ error: 'No image file provided' });
     }
 
-    const userId = req.user.id;
-    const imageBuffer = req.file.buffer;
-    const apiKey = process.env.AZURE_VISION_KEY;
-    const endpoint = process.env.AZURE_VISION_ENDPOINT;
-
-    if (!apiKey || !endpoint) {
-      console.error('Azure Vision credentials missing');
-      return res.status(500).json({ error: 'Azure Vision API not configured' });
-    }
-
-    // Call Azure Computer Vision OCR using REST API
-    const readUrl = `${endpoint}vision/v3.2/read/analyze`;
-
-    const response = await fetch(readUrl, {
-      method: 'POST',
-      headers: {
-        'Ocp-Apim-Subscription-Key': apiKey,
-        'Content-Type': 'application/octet-stream',
-      },
-      body: imageBuffer,
+    const base64 = req.file.buffer.toString('base64');
+    const mimeType = req.file.mimetype || 'image/png';
+    const extractedText = await extractNotesFromImageBase64({ base64, mimeType });
+    const finalText = extractedText.trim() || 'No text could be extracted from this image.';
+    const originalName = req.file.originalname || 'Uploaded Image';
+    const title = originalName.replace(/\.[^.]+$/, '') || 'Uploaded Image';
+    const fileUrl = await uploadBufferToAzureBlob({
+      buffer: req.file.buffer,
+      mimeType,
+      userId: req.user!.id,
+      originalFileName: originalName,
+      folder: 'images',
     });
 
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error('Azure Vision API error:', response.status, errorText);
-      return res.status(500).json({ 
-        error: `Azure Vision API error: ${response.status}` 
-      });
-    }
-
-    // Get the operation location to poll for results
-    const operationLocation = response.headers.get('Operation-Location');
-    if (!operationLocation) {
-      console.error('No operation location returned from Azure Vision');
-      return res.status(500).json({ error: 'Failed to process image: No operation location' });
-    }
-
-    // Poll for results
-    let extractedText = '';
-    let attempts = 0;
-    const maxAttempts = 30;
-
-    while (attempts < maxAttempts) {
-      await new Promise(resolve => setTimeout(resolve, 500));
-
-      const resultResponse = await fetch(operationLocation, {
-        method: 'GET',
-        headers: {
-          'Ocp-Apim-Subscription-Key': apiKey,
-        },
-      });
-
-      if (!resultResponse.ok) {
-        const errorText = await resultResponse.text();
-        console.error('Azure Vision poll error:', resultResponse.status, errorText);
-        attempts++;
-        continue;
-      }
-
-      const result = (await resultResponse.json()) as {
-        status: string;
-        analyzeResult?: {
-          readResults: Array<{ lines: Array<{ text: string }> }>;
-        };
-      };
-
-      if (result.status === 'succeeded') {
-        // Extract text from results
-        if (result.analyzeResult && result.analyzeResult.readResults) {
-          for (const page of result.analyzeResult.readResults) {
-            for (const line of page.lines) {
-              extractedText += line.text + '\n';
-            }
-          }
-        }
-        break;
-      } else if (result.status === 'failed') {
-        console.error('Azure Vision processing failed');
-        return res.status(500).json({ error: 'Image processing failed' });
-      }
-
-      attempts++;
-    }
-
-    if (attempts >= maxAttempts) {
-      console.error('Azure Vision polling timeout');
-      return res.status(500).json({ error: 'Image processing timed out' });
-    }
+    const note = await prisma.note.create({
+      data: {
+        userId: req.user!.id,
+        title,
+        rawText: finalText,
+        extractedText: finalText,
+        sourceType: 'IMAGE',
+        fileUrl,
+        originalFileName: originalName,
+      },
+    });
 
     res.json({
-      extractedText: extractedText.trim() || 'No text could be extracted from this image.',
+      extractedText: finalText,
+      note,
     });
   } catch (error) {
     console.error('OCR Error:', error);

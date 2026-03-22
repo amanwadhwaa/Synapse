@@ -11,6 +11,7 @@ import {
   Calendar,
   Tag,
   Send,
+  Trash2,
 } from "lucide-react";
 import toast from "react-hot-toast";
 
@@ -19,8 +20,9 @@ import {
   summarizeNote,
   generateQuiz,
   chatWithNote,
+  getChatHistory,
+  clearChatHistory,
 } from "../services/aiService";
-import type { ChatMessagePayload } from "../services/aiService";
 
 interface Note {
   id: string;
@@ -45,6 +47,7 @@ interface ChatMessage {
   id: string;
   role: "user" | "assistant";
   content: string;
+  createdAt?: string;
 }
 
 const NoteDetail: React.FC = () => {
@@ -54,21 +57,19 @@ const NoteDetail: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [aiResponses, setAiResponses] = useState<AIResponse[]>([]);
   const [processingAI, setProcessingAI] = useState<string | null>(null);
-  const [chatMessages, setChatMessages] = useState<ChatMessage[]>([
-    {
-      id: "intro",
-      role: "assistant",
-      content:
-        "Hi! I'm ready to help you understand these notes. What would you like to know?",
-    },
-  ]);
+  const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
   const [chatInput, setChatInput] = useState("");
   const [isChatting, setIsChatting] = useState(false);
+  const [loadingChatHistory, setLoadingChatHistory] = useState(false);
+  const [clearingChat, setClearingChat] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [deletingNote, setDeletingNote] = useState(false);
   const chatBottomRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     if (id) {
       fetchNote();
+      void fetchChatHistory(id);
     }
   }, [id]);
 
@@ -193,31 +194,92 @@ const NoteDetail: React.FC = () => {
       id: `user-${Date.now()}`,
       role: "user",
       content: trimmedMessage,
+      createdAt: new Date().toISOString(),
     };
-
-    const historyForRequest: ChatMessagePayload[] = chatMessages.map(
-      ({ role, content }) => ({ role, content }),
-    );
 
     setChatMessages((prev) => [...prev, userMessage]);
     setChatInput("");
     setIsChatting(true);
 
     try {
-      const response = await chatWithNote(id, trimmedMessage, historyForRequest);
-      console.log(response.result);  
-      const assistantMessage: ChatMessage = {
-        id: `assistant-${Date.now()}`,
-        role: "assistant",
-        content: response.result,
-      };
+      const response = await chatWithNote(id, trimmedMessage);
 
-      setChatMessages((prev) => [...prev, assistantMessage]);
+      if (response?.assistantMessage) {
+        setChatMessages((prev) => [
+          ...prev.filter((msg) => msg.id !== userMessage.id),
+          response.userMessage,
+          response.assistantMessage,
+        ]);
+      }
     } catch (error) {
       console.error(error);
       toast.error("Failed to get AI response");
+      setChatMessages((prev) => prev.filter((msg) => msg.id !== userMessage.id));
     } finally {
       setIsChatting(false);
+    }
+  };
+
+  const fetchChatHistory = async (noteId: string) => {
+    setLoadingChatHistory(true);
+    try {
+      const response = await getChatHistory(noteId);
+      setChatMessages(response.messages || []);
+    } catch (error) {
+      console.error(error);
+      toast.error("Failed to load chat history");
+    } finally {
+      setLoadingChatHistory(false);
+    }
+  };
+
+  const handleClearChat = async () => {
+    if (!id || clearingChat) return;
+
+    setClearingChat(true);
+    try {
+      await clearChatHistory(id);
+      setChatMessages([]);
+      toast.success("Chat cleared");
+    } catch (error) {
+      console.error(error);
+      toast.error("Failed to clear chat");
+    } finally {
+      setClearingChat(false);
+    }
+  };
+
+  const formatChatTimestamp = (timestamp?: string) => {
+    if (!timestamp) return "";
+    return new Date(timestamp).toLocaleTimeString("en-US", {
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  };
+
+  const handleDeleteNote = async () => {
+    if (!id || deletingNote) return;
+
+    setDeletingNote(true);
+    try {
+      const response = await fetch(`/api/notes/${id}`, {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || "Failed to delete note");
+      }
+
+      toast.success("Note deleted successfully");
+      navigate("/notes");
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Failed to delete note";
+      toast.error(message);
+      setDeletingNote(false);
     }
   };
 
@@ -255,6 +317,14 @@ const NoteDetail: React.FC = () => {
         >
           <ArrowLeft className="h-5 w-5" />
           <span>Back to Notes</span>
+        </button>
+
+        <button
+          onClick={() => setShowDeleteModal(true)}
+          className="inline-flex items-center gap-2 rounded-lg border border-red-500/30 bg-red-500/10 px-3 py-2 text-sm text-red-300 hover:bg-red-500/20 transition-colors"
+        >
+          <Trash2 className="h-4 w-4" />
+          <span>Delete</span>
         </button>
       </div>
 
@@ -329,10 +399,10 @@ const NoteDetail: React.FC = () => {
           {/* Note Content */}
           <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-xl p-6">
             <h2 className="text-2xl font-bold text-white mb-4">Note Content</h2>
-            <div className="prose prose-invert max-w-none">
-              <pre className="text-gray-300 leading-relaxed">
-                {note.rawText}
-              </pre>
+            <div
+              className="text-gray-300 leading-relaxed [&_strong]:font-bold [&_h1]:text-xl [&_h1]:font-semibold [&_h1]:mb-3 [&_h2]:text-lg [&_h2]:font-semibold [&_h2]:mb-2 [&_h3]:text-base [&_h3]:font-semibold [&_h3]:mb-2 [&_ul]:list-disc [&_ul]:pl-6 [&_ol]:list-decimal [&_ol]:pl-6 [&_li]:my-1 [&_pre]:rounded-md [&_pre]:bg-slate-950 [&_pre]:p-3 [&_pre]:overflow-x-auto [&_pre]:border [&_pre]:border-white/10 [&_code]:font-mono [&_code]:text-[13px] [&_table]:w-full [&_table]:border-collapse [&_table]:text-sm [&_th]:border [&_th]:border-white/20 [&_th]:bg-white/10 [&_th]:px-3 [&_th]:py-2 [&_td]:border [&_td]:border-white/10 [&_td]:px-3 [&_td]:py-2"
+            >
+              <ReactMarkdown>{note.rawText}</ReactMarkdown>
             </div>
           </div>
 
@@ -367,15 +437,36 @@ const NoteDetail: React.FC = () => {
 
         <aside className="lg:col-span-2">
           <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-xl h-[70vh] lg:sticky lg:top-6 flex flex-col overflow-hidden">
-            <div className="px-5 py-4 border-b border-white/10 flex items-center space-x-3">
-              <div className="relative">
-                <Brain className="h-5 w-5 text-[var(--color-primary)]" />
-                <div className="absolute -top-0.5 -right-0.5 h-2 w-2 rounded-full bg-[var(--color-primary)] animate-pulse"></div>
+            <div className="px-5 py-4 border-b border-white/10 flex items-center justify-between">
+              <div className="flex items-center space-x-3">
+                <div className="relative">
+                  <Brain className="h-5 w-5 text-[var(--color-primary)]" />
+                  <div className="absolute -top-0.5 -right-0.5 h-2 w-2 rounded-full bg-[var(--color-primary)] animate-pulse"></div>
+                </div>
+                <h2 className="text-lg font-semibold text-white">Ask SYNAPSE</h2>
               </div>
-              <h2 className="text-lg font-semibold text-white">Ask SYNAPSE</h2>
+              <button
+                onClick={() => {
+                  void handleClearChat();
+                }}
+                disabled={clearingChat || isChatting}
+                className="text-xs px-3 py-1.5 rounded-lg border border-white/15 text-gray-300 hover:text-white hover:bg-white/10 transition disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {clearingChat ? "Clearing..." : "Clear Chat"}
+              </button>
             </div>
 
             <div className="flex-1 overflow-y-auto p-4 space-y-4">
+              {loadingChatHistory && (
+                <div className="text-center text-sm text-gray-400">Loading chat history...</div>
+              )}
+
+              {!loadingChatHistory && chatMessages.length === 0 && (
+                <div className="text-center text-sm text-gray-400">
+                  Ask your first question about this note.
+                </div>
+              )}
+
               {chatMessages.map((message) => (
                 <div
                   key={message.id}
@@ -388,20 +479,25 @@ const NoteDetail: React.FC = () => {
                         : "bg-slate-900/80 border border-white/10 text-gray-200"
                     }`}
                   >
-                    {message.role === "user" ? (
-                      message.content
-                    ) : (
-                      <ReactMarkdown
-                        components={{
-                          p: ({ children }) => <p className="mb-2 last:mb-0">{children}</p>,
-                          strong: ({ children }) => <strong className="font-bold text-white">{children}</strong>,
-                          ol: ({ children }) => <ol className="list-decimal ml-4 space-y-1 mb-2">{children}</ol>,
-                          ul: ({ children }) => <ul className="list-disc ml-4 space-y-1 mb-2">{children}</ul>,
-                          code: ({ children }) => <code className="bg-white/10 px-1 py-0.5 rounded text-xs font-mono">{children}</code>,
-                        }}
+                    {message.role === "assistant" ? (
+                      <div
+                        className="text-gray-200 [&_strong]:font-bold [&_h1]:text-base [&_h1]:font-semibold [&_h2]:text-[15px] [&_h2]:font-semibold [&_h3]:text-sm [&_h3]:font-semibold [&_ul]:list-disc [&_ul]:pl-5 [&_ol]:list-decimal [&_ol]:pl-5 [&_li]:my-1 [&_pre]:rounded-md [&_pre]:bg-slate-950 [&_pre]:p-3 [&_pre]:overflow-x-auto [&_pre]:border [&_pre]:border-white/10 [&_code]:font-mono [&_code]:text-[13px] [&_table]:w-full [&_table]:border-collapse [&_table]:text-xs [&_th]:border [&_th]:border-white/20 [&_th]:bg-white/10 [&_th]:px-2 [&_th]:py-1 [&_td]:border [&_td]:border-white/10 [&_td]:px-2 [&_td]:py-1"
                       >
-                        {message.content.replace(/(\d+\..+)\n\n(\d+\.)/g, '$1\n$2')}
-                      </ReactMarkdown>
+                        <ReactMarkdown>{message.content}</ReactMarkdown>
+                      </div>
+                    ) : (
+                      <p className="whitespace-pre-wrap">{message.content}</p>
+                    )}
+                    {message.createdAt && (
+                      <p
+                        className={`mt-1.5 text-[11px] ${
+                          message.role === "user"
+                            ? "text-white/75"
+                            : "text-gray-400"
+                        }`}
+                      >
+                        {formatChatTimestamp(message.createdAt)}
+                      </p>
                     )}
                   </div>
                 </div>
@@ -450,6 +546,37 @@ const NoteDetail: React.FC = () => {
           </div>
         </aside>
       </div>
+
+      {showDeleteModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
+          <div className="w-full max-w-md rounded-2xl border border-white/20 bg-slate-900 p-6">
+            <h3 className="text-lg font-semibold text-white mb-3">Delete Note</h3>
+            <p className="text-sm text-gray-300 mb-6">
+              Are you sure you want to delete this note? This will also delete all quizzes and chat history associated with it.
+            </p>
+            <div className="flex justify-end gap-3">
+              <button
+                type="button"
+                onClick={() => setShowDeleteModal(false)}
+                disabled={deletingNote}
+                className="px-4 py-2 rounded-lg border border-white/20 text-white hover:bg-white/10 transition-colors disabled:opacity-50"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  void handleDeleteNote();
+                }}
+                disabled={deletingNote}
+                className="px-4 py-2 rounded-lg bg-red-600 text-white hover:bg-red-500 transition-colors disabled:opacity-50"
+              >
+                {deletingNote ? "Deleting..." : "Confirm Delete"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
