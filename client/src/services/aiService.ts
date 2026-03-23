@@ -70,5 +70,8 @@ export async function generateAudioLecture(
   return response.json() as Promise<{
     audioUrl: string;
     cached: boolean;
+    lectureLanguage?: string;
+    fallbackToEnglish?: boolean;
+    fallbackNote?: string | null;
   }>;
 }

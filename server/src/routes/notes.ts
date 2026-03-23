@@ -9,7 +9,10 @@ import {
   uploadBufferToAzureBlob,
 } from "../services/fileStorage";
 import { transcribeAudioBuffer } from "../services/speechToText";
-import { getPreferredLanguage } from "../services/preferredLanguage";
+import {
+  getPreferredLanguage,
+  normalizePreferredLanguage,
+} from "../services/preferredLanguage";
 import { azureOpenAIClient, azureOpenAIModel } from "../services/azureOpenAI";
 const speechSdk = require("microsoft-cognitiveservices-speech-sdk");
 const { PDFParse } = require("pdf-parse");
@@ -23,14 +26,29 @@ const ENGLISH_CHECK_PROMPT =
 const TRANSLATE_TO_ENGLISH_SYSTEM_PROMPT =
   "You are a translator. Translate the following text to English accurately and naturally. Return only the translated text, nothing else.";
 
-const AUDIO_LECTURE_SYSTEM_PROMPT = `You are an enthusiastic and clear university tutor. Based on the note content provided, create an engaging spoken lecture script of approximately 5 minutes (around 700-800 words).
-- Start with a friendly introduction of the topic
-- Explain all key concepts clearly with real-world examples
-- Use a conversational tone as if speaking directly to a student
-- Include natural pause cues like '...' or 'Now,'
-- End with a brief summary of what was covered
-- Do NOT include any markdown, headers, or bullet points - only plain flowing speech text
-Respond in the user's preferred language.`;
+const voiceMap: Record<string, string> = {
+  English: "en-US-BrianNeural",
+  Hindi: "hi-IN-MadhurNeural",
+  Kannada: "kn-IN-GaganNeural",
+  Tamil: "ta-IN-ValluvarNeural",
+  Telugu: "te-IN-MohanNeural",
+  French: "fr-FR-HenriNeural",
+  Spanish: "es-ES-AlvaroNeural",
+  German: "de-DE-ConradNeural",
+  Japanese: "ja-JP-KeitaNeural",
+  Chinese: "zh-CN-YunxiNeural",
+  Arabic: "ar-SA-HamedNeural",
+  Portuguese: "pt-BR-AntonioNeural",
+};
+
+const ENGLISH_FALLBACK_LANGUAGE = "English";
+const ENGLISH_FALLBACK_VOICE = "en-US-BrianNeural";
+
+const buildAudioLectureSystemPrompt = (preferredLanguage: string) =>
+  `You are an enthusiastic and clear university tutor. Create an engaging spoken lecture script of approximately 5 minutes (700-800 words) based on the note content provided.
+IMPORTANT: Deliver the entire lecture in ${preferredLanguage}.
+If the note content is in a different language, translate and explain it naturally in ${preferredLanguage}.
+Use a conversational tone, include real-world examples, natural pause cues, and end with a summary. No markdown or bullet points - only plain flowing speech.`;
 
 async function isTextEnglish(text: string): Promise<boolean> {
   const completion = await azureOpenAIClient.chat.completions.create({
@@ -136,11 +154,11 @@ async function generateAudioLectureScript({
     messages: [
       {
         role: "system",
-        content: AUDIO_LECTURE_SYSTEM_PROMPT,
+        content: buildAudioLectureSystemPrompt(preferredLanguage),
       },
       {
         role: "user",
-        content: `Preferred language: ${preferredLanguage}\n\nNote content:\n${noteContent}`,
+        content: noteContent,
       },
     ],
   });
@@ -148,7 +166,17 @@ async function generateAudioLectureScript({
   return (completion.choices[0]?.message?.content || "").trim();
 }
 
-async function synthesizeLectureAudioBuffer(script: string): Promise<Buffer> {
+function getVoiceForLanguage(preferredLanguage: string): string {
+  return voiceMap[preferredLanguage] || ENGLISH_FALLBACK_VOICE;
+}
+
+async function synthesizeLectureAudioBuffer({
+  script,
+  voice,
+}: {
+  script: string;
+  voice: string;
+}): Promise<Buffer> {
   const speechKey = process.env.AZURE_SPEECH_KEY;
   const speechRegion = process.env.AZURE_SPEECH_REGION;
 
@@ -160,7 +188,7 @@ async function synthesizeLectureAudioBuffer(script: string): Promise<Buffer> {
     speechKey,
     speechRegion,
   );
-  speechConfig.speechSynthesisVoiceName = "en-US-BrianNeural";
+  speechConfig.speechSynthesisVoiceName = voice;
   speechConfig.speechSynthesisOutputFormat =
     speechSdk.SpeechSynthesisOutputFormat.Audio16Khz32KBitRateMonoMp3;
 
@@ -655,6 +683,9 @@ router.post("/:id/audio-lecture", authMiddleware, async (req: AuthRequest, res) 
   try {
     const noteId = String(req.params.id || "");
     const forceRegenerate = Boolean(req.body?.forceRegenerate);
+    const preferredLanguage = normalizePreferredLanguage(
+      await getPreferredLanguage(req.user!.id),
+    );
 
     const note = await prisma.note.findFirst({
       where: {
@@ -667,6 +698,7 @@ router.post("/:id/audio-lecture", authMiddleware, async (req: AuthRequest, res) 
         title: true,
         rawText: true,
         audioLectureUrl: true,
+        audioLectureLanguage: true,
       },
     });
 
@@ -674,12 +706,19 @@ router.post("/:id/audio-lecture", authMiddleware, async (req: AuthRequest, res) 
       return res.status(404).json({ error: "Note not found" });
     }
 
-    if (note.audioLectureUrl && !forceRegenerate) {
+    const isLanguageCacheMatch =
+      note.audioLectureLanguage === preferredLanguage;
+
+    if (note.audioLectureUrl && !forceRegenerate && isLanguageCacheMatch) {
       const hasSasToken = note.audioLectureUrl.includes("?");
       if (hasSasToken) {
         return res.json({
           audioUrl: note.audioLectureUrl,
           cached: true,
+          lectureLanguage: note.audioLectureLanguage || preferredLanguage,
+          fallbackToEnglish:
+            (note.audioLectureLanguage || preferredLanguage) === ENGLISH_FALLBACK_LANGUAGE &&
+            preferredLanguage !== ENGLISH_FALLBACK_LANGUAGE,
         });
       }
 
@@ -696,12 +735,19 @@ router.post("/:id/audio-lecture", authMiddleware, async (req: AuthRequest, res) 
       return res.json({
         audioUrl: upgradedSasUrl,
         cached: true,
+        lectureLanguage: note.audioLectureLanguage || preferredLanguage,
+        fallbackToEnglish:
+          (note.audioLectureLanguage || preferredLanguage) === ENGLISH_FALLBACK_LANGUAGE &&
+          preferredLanguage !== ENGLISH_FALLBACK_LANGUAGE,
       });
     }
 
-    const preferredLanguage = await getPreferredLanguage(req.user!.id);
+    const selectedVoice = getVoiceForLanguage(preferredLanguage);
 
     let lectureScript = "";
+    let lectureLanguage = preferredLanguage;
+    let fallbackToEnglish = false;
+    let fallbackNote: string | null = null;
     try {
       lectureScript = await generateAudioLectureScript({
         noteContent: note.rawText,
@@ -724,13 +770,55 @@ router.post("/:id/audio-lecture", authMiddleware, async (req: AuthRequest, res) 
 
     let audioBuffer: Buffer;
     try {
-      audioBuffer = await synthesizeLectureAudioBuffer(lectureScript);
+      audioBuffer = await synthesizeLectureAudioBuffer({
+        script: lectureScript,
+        voice: selectedVoice,
+      });
     } catch (error) {
       console.error("AUDIO LECTURE TTS ERROR:", error);
-      return res.status(500).json({
-        error: "Failed to convert script to audio",
-        stage: "tts",
-      });
+
+      if (preferredLanguage === ENGLISH_FALLBACK_LANGUAGE) {
+        return res.status(500).json({
+          error: "Failed to convert script to audio",
+          stage: "tts",
+        });
+      }
+
+      fallbackToEnglish = true;
+      fallbackNote =
+        "Audio delivered in English (preferred language voice unavailable)";
+      lectureLanguage = ENGLISH_FALLBACK_LANGUAGE;
+
+      try {
+        lectureScript = await generateAudioLectureScript({
+          noteContent: note.rawText,
+          preferredLanguage: ENGLISH_FALLBACK_LANGUAGE,
+        });
+      } catch {
+        return res.status(500).json({
+          error: "Failed to generate lecture script",
+          stage: "script",
+        });
+      }
+
+      if (!lectureScript.trim()) {
+        return res.status(500).json({
+          error: "Failed to generate lecture script",
+          stage: "script",
+        });
+      }
+
+      try {
+        audioBuffer = await synthesizeLectureAudioBuffer({
+          script: lectureScript,
+          voice: ENGLISH_FALLBACK_VOICE,
+        });
+      } catch {
+        return res.status(500).json({
+          error: "Failed to convert script to audio",
+          stage: "tts",
+        });
+      }
     }
 
     const rawAudioUrl = await uploadBufferToAzureBlob({
@@ -757,12 +845,16 @@ router.post("/:id/audio-lecture", authMiddleware, async (req: AuthRequest, res) 
       },
       data: {
         audioLectureUrl: audioUrl,
+        audioLectureLanguage: lectureLanguage,
       },
     });
 
     return res.json({
       audioUrl,
       cached: false,
+      lectureLanguage,
+      fallbackToEnglish,
+      fallbackNote,
     });
   } catch (error) {
     console.error("AUDIO LECTURE ERROR:", error);

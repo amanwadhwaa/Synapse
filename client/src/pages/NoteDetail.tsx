@@ -40,6 +40,7 @@ interface Note {
   sourceType: "TYPED" | "IMAGE" | "AUDIO" | "PDF" | "VOICE";
   fileUrl?: string;
   audioLectureUrl?: string | null;
+  audioLectureLanguage?: string | null;
   createdAt: string;
   title?: string;
 }
@@ -81,6 +82,8 @@ const NoteDetail: React.FC = () => {
   const [simplifyLevel, setSimplifyLevel] = useState(3);
   const [isGeneratingLecture, setIsGeneratingLecture] = useState(false);
   const [lectureAudioUrl, setLectureAudioUrl] = useState<string | null>(null);
+  const [lectureLanguage, setLectureLanguage] = useState("English");
+  const [lectureFallbackNote, setLectureFallbackNote] = useState<string | null>(null);
   const [lectureErrorMessage, setLectureErrorMessage] = useState<string | null>(null);
   const [isLecturePlaying, setIsLecturePlaying] = useState(false);
   const [lectureCurrentTime, setLectureCurrentTime] = useState(0);
@@ -103,7 +106,8 @@ const NoteDetail: React.FC = () => {
 
   useEffect(() => {
     setLectureAudioUrl(note?.audioLectureUrl || null);
-  }, [note?.audioLectureUrl]);
+    setLectureLanguage(note?.audioLectureLanguage || "English");
+  }, [note?.audioLectureUrl, note?.audioLectureLanguage]);
 
   useEffect(() => {
     return () => {
@@ -392,11 +396,14 @@ const NoteDetail: React.FC = () => {
 
     setIsGeneratingLecture(true);
     setLectureErrorMessage(null);
+    setLectureFallbackNote(null);
 
     try {
       const response = await generateAudioLecture(id, forceRegenerate);
       console.log("Audio lecture URL:", response.audioUrl);
       setLectureAudioUrl(response.audioUrl);
+      setLectureLanguage(response.lectureLanguage || "English");
+      setLectureFallbackNote(response.fallbackToEnglish ? (response.fallbackNote || "Audio delivered in English (preferred language voice unavailable)") : null);
       setLectureCurrentTime(0);
       setLectureDuration(0);
       setIsLecturePlaying(false);
@@ -405,6 +412,7 @@ const NoteDetail: React.FC = () => {
           ? {
               ...prev,
               audioLectureUrl: response.audioUrl,
+              audioLectureLanguage: response.lectureLanguage || "English",
             }
           : prev,
       );
@@ -622,7 +630,7 @@ const NoteDetail: React.FC = () => {
               <div className="rounded-lg border border-white/10 bg-white/5 p-4">
                 <div className="mb-3 flex items-center justify-between gap-3">
                   <p className="text-sm text-blue-200">
-                    🎓 Tutor Lecture - {note.title || "Untitled Note"}
+                    🎓 Tutor Lecture — {note.title || "Untitled Note"} · {lectureLanguage}
                   </p>
                   <button
                     type="button"
@@ -710,6 +718,10 @@ const NoteDetail: React.FC = () => {
                     Stop
                   </button>
                 </div>
+
+                {lectureFallbackNote && (
+                  <p className="mt-3 text-xs text-gray-400">{lectureFallbackNote}</p>
+                )}
               </div>
             )}
 
