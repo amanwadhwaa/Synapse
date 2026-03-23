@@ -9,7 +9,7 @@ export default function GeneratePlan({ setPlan }: GeneratePlanProps) {
   const generatePlan = async () => {
     const userId = user?.id;
     console.log("userId", userId);
-    const res = await fetch("http://localhost:5000/api/study-plan/generate", {
+    const res = await fetch("/api/study-plan/generate", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

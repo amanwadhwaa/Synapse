@@ -6,12 +6,14 @@ import { useState } from "react";
 import { apiRequest } from "../services/api";
 import StartSessionModal from "../components/StartSessionModal";
 
+
 function Dashboard() {
   // TODO: Replace with actual user from auth store
   const navigate = useNavigate();
   const { user } = useAuthStore();
   const firstName = user?.name?.split(" ")[0] || "there";
   const [isStartModalOpen, setIsStartModalOpen] = useState(false);
+  const primaryBtn = "flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-[var(--color-primary)] text-white shadow-lg shadow-blue-500/25 hover:opacity-90 transition";
 
   const startStudySession = () => {
     setIsStartModalOpen(true);
@@ -48,12 +50,46 @@ function Dashboard() {
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="pt-6 mb-8">
-          <h1 className="text-4xl font-bold text-white mb-2">
-            Welcome back, {firstName}!
-          </h1>
-          <p className="text-gray-400 text-lg">
-            Ready to continue your learning journey?
-          </p>
+          {/* Header Row */}
+          <div className="flex justify-between items-start mb-6 flex-wrap gap-4">
+            
+            {/* Left: Heading + subtext */}
+            <div>
+              <h1 className="text-4xl font-bold text-white mb-2">
+                Welcome back, {firstName}!
+              </h1>
+              <p className="text-gray-400 text-lg">
+                Ready to continue your learning journey?
+              </p>
+            </div>
+
+            {/* Right: Buttons */}
+            <div className="flex items-center gap-3">
+                {/* + Button → Create Note */}
+                <button
+                  onClick={() => navigate('/notes')}
+                  className="w-10 h-10 flex items-center justify-center rounded-xl bg-[var(--color-primary)] text-white shadow-lg shadow-blue-500/25 hover:opacity-90 transition"
+                >
+                  +
+                </button>
+
+                {/* Study Session (same as Start Study Session) */}
+                <button
+                  onClick={() => setIsStartModalOpen(true)}
+                  className={primaryBtn}
+                >
+                  Study Session
+                </button>
+
+                {/* Group Study */}
+                <button
+                  className={primaryBtn}
+                >
+                  Group Study Session
+                </button>
+
+                </div>
+          </div>
         </div>
 
         {/* Stats Cards */}
@@ -122,69 +158,6 @@ function Dashboard() {
         {/* Activity Heatmap */}
         <ActivityHeatmap />
 
-        {/* Quick Actions & Recent Activity */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-6">
-            <h2 className="text-2xl font-semibold text-white mb-6">
-              Quick Actions
-            </h2>
-            <div className="space-y-4">
-              <button
-                onClick={() => navigate("/notes")}
-                className="w-full bg-[var(--color-primary)] hover:bg-blue-600 text-white px-6 py-4 rounded-xl transition-all duration-200 shadow-lg shadow-blue-500/25 hover:shadow-blue-500/40 transform hover:scale-105 text-left font-medium"
-              >
-                Create New Note
-              </button>
-              <button
-                onClick={startStudySession}
-                className="w-full bg-[var(--color-primary)] hover:bg-blue-600 text-white px-6 py-4 rounded-xl transition-all duration-200 shadow-lg shadow-blue-500/25 hover:shadow-blue-500/40 transform hover:scale-105 text-left font-medium"
-              >
-                Start Study Session
-              </button>
-              <button
-                onClick={() => navigate("/quizzes")}
-                className="w-full bg-[var(--color-primary)] hover:bg-blue-600 text-white px-6 py-4 rounded-xl transition-all duration-200 shadow-lg shadow-blue-500/25 hover:shadow-blue-500/40 transform hover:scale-105 text-left font-medium"
-              >
-                Generate Quiz
-              </button>
-            </div>
-          </div>
-
-          <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-6">
-            <h2 className="text-2xl font-semibold text-white mb-6">
-              Recent Activity
-            </h2>
-            <div className="space-y-4">
-              <div className="flex items-center p-3 rounded-xl bg-white/5 backdrop-blur-sm">
-                <div className="w-3 h-3 bg-[var(--color-primary)] rounded-full mr-4"></div>
-                <div>
-                  <span className="text-white text-sm">
-                    Completed "Data Structures" quiz - 92%
-                  </span>
-                  <p className="text-gray-400 text-xs">2 hours ago</p>
-                </div>
-              </div>
-              <div className="flex items-center p-3 rounded-xl bg-white/5 backdrop-blur-sm">
-                <div className="w-3 h-3 bg-green-400 rounded-full mr-4"></div>
-                <div>
-                  <span className="text-white text-sm">
-                    Added notes for "Machine Learning" subject
-                  </span>
-                  <p className="text-gray-400 text-xs">1 day ago</p>
-                </div>
-              </div>
-              <div className="flex items-center p-3 rounded-xl bg-white/5 backdrop-blur-sm">
-                <div className="w-3 h-3 bg-yellow-400 rounded-full mr-4"></div>
-                <div>
-                  <span className="text-white text-sm">
-                    Study session: 45 minutes focused
-                  </span>
-                  <p className="text-gray-400 text-xs">2 days ago</p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
       </div>
     </div>
   );

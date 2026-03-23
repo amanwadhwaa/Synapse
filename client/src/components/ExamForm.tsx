@@ -15,7 +15,7 @@ export default function ExamForm({ setExams }: ExamFormProps) {
 
     const userId = user?.id;
 
-    const res = await fetch("http://localhost:5000/api/exams", {
+    const res = await fetch("/api/exams", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
