@@ -28,6 +28,31 @@ export interface QuizDetail {
   questions: QuizQuestion[];
 }
 
+export interface PerformanceData {
+  totalQuizzes: number;
+  averageScore: number;
+  bestSubject: string;
+  weakestSubject: string;
+  scoreOverTime: { date: string; score: number }[];
+  scoreBySubject: { subject: string; averageScore: number; totalQuizzes: number }[];
+  topicBreakdown: { topic: string; correct: number; incorrect: number }[];
+  aiAnalysis: string;
+  quizBreakdown: QuizBreakdownItem[];
+  scoreDistribution: { range: string; count: number }[];
+}
+
+export interface QuizBreakdownItem {
+  quizId: string;
+  subject: string;
+  noteTitle: string;
+  score: number;
+  totalQuestions: number;
+  percentage: number;
+  completedAt: string;
+  wrongTopics: string[];
+  aiInsight: string;
+}
+
 export async function fetchQuizzes() {
   return apiRequest("/quizzes") as Promise<QuizListItem[]>;
 }
@@ -42,5 +67,39 @@ export async function saveQuizAttempt(
 ) {
   return apiRequest(`/quizzes/${quizId}/attempt`, "POST", payload) as Promise<{
     score: number;
+  }>;
+}
+
+export async function fetchBrainFatigue() {
+  return apiRequest("/quizzes/brain-fatigue") as Promise<{
+    byHour: { hour: number; averageScore: number; attempts: number }[];
+    byDay: { day: string; averageScore: number; attempts: number }[];
+    peakHour: number;
+    worstHour: number;
+    peakDay: string;
+    worstDay: string;
+    fatigueDropPercent: number;
+    aiInsight: string;
+  }>;
+}
+
+export async function fetchPerformance() {
+  return apiRequest("/quizzes/performance") as Promise<PerformanceData>;
+}
+
+export async function fetchForgettingCurve() {
+  return apiRequest("/quizzes/forgetting-curve") as Promise<{
+    subjects: {
+      subject: string;
+      latestScore: number;
+      daysSinceLastAttempt: number;
+      forgettingRate: number;
+      predictedScoreTomorrow: number;
+      predictedScoreIn7Days: number;
+      status: "fresh" | "fading" | "critical" | "forgotten";
+      allAttempts: { date: string; score: number }[];
+    }[];
+    mostAtRisk: string | null;
+    aiInsight: string;
   }>;
 }

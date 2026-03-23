@@ -62,6 +62,7 @@ const NoteDetail: React.FC = () => {
   const [isChatting, setIsChatting] = useState(false);
   const [loadingChatHistory, setLoadingChatHistory] = useState(false);
   const [clearingChat, setClearingChat] = useState(false);
+  const [simplifyLevel, setSimplifyLevel] = useState(3);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [deletingNote, setDeletingNote] = useState(false);
   const chatBottomRef = useRef<HTMLDivElement | null>(null);
@@ -109,15 +110,15 @@ const NoteDetail: React.FC = () => {
       let response: { result: string } | null = null;
 
       if (action === "simplify") {
-        response = await simplifyNote(note.id, note.rawText);
+        response = await simplifyNote(note.id, note.rawText, simplifyLevel);
       }
 
       if (action === "summarize") {
-        response = await summarizeNote(note.id, note.rawText);
+        response = await summarizeNote(note.id, note.rawText, simplifyLevel);
       }
 
       if (action === "quiz") {
-        await generateQuiz(note.id, note.rawText);
+        await generateQuiz(note.id, note.rawText, simplifyLevel);
         toast.success("Quiz generated! Find it in the Quizzes section");
         navigate("/quizzes");
         return;
@@ -169,6 +170,17 @@ const NoteDetail: React.FC = () => {
       default:
         return <FileText className="h-5 w-5" />;
     }
+  };
+
+  const getLevelLabel = (level: number) => {
+    const labels = {
+      1: "5 Year Old",
+      2: "Middle School",
+      3: "High School",
+      4: "University",
+      5: "PhD Graduate"
+    };
+    return labels[level as keyof typeof labels] || "High School";
   };
 
   const getAIActionIcon = (action: string) => {
@@ -354,7 +366,34 @@ const NoteDetail: React.FC = () => {
             </div>
 
             {/* AI Actions */}
-            <div className="flex flex-wrap gap-3">
+            <div className="space-y-4">
+              {/* Simplify Level Slider */}
+              <div className="bg-white/5 rounded-lg p-4 border border-white/10">
+                <div className="flex items-center justify-between mb-2">
+                  <label className="text-sm font-medium text-gray-300">AI Complexity Level</label>
+                  <span className="text-sm text-purple-300 font-semibold">{getLevelLabel(simplifyLevel)}</span>
+                </div>
+                <input
+                  type="range"
+                  min="1"
+                  max="5"
+                  value={simplifyLevel}
+                  onChange={(e) => setSimplifyLevel(Number(e.target.value))}
+                  className="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer slider"
+                  style={{
+                    background: `linear-gradient(to right, #a855f7 0%, #a855f7 ${(simplifyLevel - 1) * 25}%, #374151 ${(simplifyLevel - 1) * 25}%, #374151 100%)`
+                  }}
+                />
+                <div className="flex justify-between text-xs text-gray-400 mt-1">
+                  <span>1: 5 Year Old</span>
+                  <span>2: Middle School</span>
+                  <span>3: High School</span>
+                  <span>4: University</span>
+                  <span>5: PhD</span>
+                </div>
+              </div>
+
+              <div className="flex flex-wrap gap-3">
               <button
                 onClick={() => handleAIAction("simplify")}
                 disabled={processingAI === "simplify"}
@@ -393,6 +432,7 @@ const NoteDetail: React.FC = () => {
                 )}
                 <span>Generate Quiz</span>
               </button>
+            </div>
             </div>
           </div>
 
