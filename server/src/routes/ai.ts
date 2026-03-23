@@ -10,6 +10,7 @@ import {
   speakText,
   ChatMessage,
 } from "../services/aiService";
+import { getPreferredLanguage } from "../services/preferredLanguage";
 
 const router = express.Router();
 
@@ -21,7 +22,8 @@ router.post("/simplify", authMiddleware, async (req: AuthRequest, res) => {
       return res.status(400).json({ error: "Content required" });
     }
 
-    const result = await simplifyText(content, level || 3);
+    const preferredLanguage = await getPreferredLanguage(req.user!.id);
+    const result = await simplifyText(content, level || 3, preferredLanguage);
 
     res.json({ result });
   } catch (error) {
@@ -38,7 +40,8 @@ router.post("/summarize", authMiddleware, async (req: AuthRequest, res) => {
       return res.status(400).json({ error: "Content required" });
     }
 
-    const result = await summarizeText(content, level || 3);
+    const preferredLanguage = await getPreferredLanguage(req.user!.id);
+    const result = await summarizeText(content, level || 3, preferredLanguage);
 
     res.json({ result });
   } catch (error) {
@@ -75,7 +78,12 @@ router.post("/generate-quiz", authMiddleware, async (req: AuthRequest, res) => {
       return res.status(404).json({ error: "Note not found" });
     }
 
-    const questions = await generateQuizQuestions(content || note.rawText, level || 3);
+    const preferredLanguage = await getPreferredLanguage(req.user!.id);
+    const questions = await generateQuizQuestions(
+      content || note.rawText,
+      level || 3,
+      preferredLanguage,
+    );
 
     const quiz = await prisma.quiz.create({
       data: {
@@ -125,10 +133,12 @@ router.post("/chat", authMiddleware, async (req: AuthRequest, res) => {
       return res.status(404).json({ error: "Note not found" });
     }
 
+    const preferredLanguage = await getPreferredLanguage(req.user!.id);
     const result = await chatWithNotes(
       note.rawText,
       message,
       Array.isArray(conversationHistory) ? conversationHistory : [],
+      preferredLanguage,
     );
 
     res.json({ result });
@@ -146,7 +156,8 @@ router.post("/speak", authMiddleware, async (req: AuthRequest, res) => {
       return res.status(400).json({ error: "Content required" });
     }
 
-    const result = await speakText(content);
+    const preferredLanguage = await getPreferredLanguage(req.user!.id);
+    const result = await speakText(content, preferredLanguage);
 
     res.json({ result });
   } catch (error) {

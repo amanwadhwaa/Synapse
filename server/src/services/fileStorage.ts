@@ -33,7 +33,7 @@ export const uploadBufferToAzureBlob = async ({
   mimeType: string;
   userId: string;
   originalFileName: string;
-  folder: "images" | "pdfs";
+  folder: "images" | "pdfs" | "audios";
 }) => {
   const containerClient = getBlobContainerClient();
   await containerClient.createIfNotExists();
@@ -49,4 +49,20 @@ export const uploadBufferToAzureBlob = async ({
   });
 
   return blockBlobClient.url;
+};
+
+export const deleteAzureBlobByUrl = async (blobUrl: string) => {
+  const containerClient = getBlobContainerClient();
+
+  const parsed = new URL(blobUrl);
+  const segments = parsed.pathname.split("/").filter(Boolean);
+
+  // URL format: /<container>/<blobName>
+  if (segments.length < 2) {
+    return;
+  }
+
+  const blobName = decodeURIComponent(segments.slice(1).join("/"));
+  const blockBlobClient = containerClient.getBlockBlobClient(blobName);
+  await blockBlobClient.deleteIfExists();
 };

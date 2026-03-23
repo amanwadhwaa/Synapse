@@ -27,15 +27,18 @@ export async function generateQuiz(noteId: string, content: string, level: numbe
 export async function chatWithNote(
   noteId: string,
   message: string,
+  preferredLanguage?: string,
 ) {
   return apiRequest(`/chat/${noteId}`, "POST", {
     message,
+    preferredLanguage,
   });
 }
 
 export async function getChatHistory(noteId: string) {
   return apiRequest(`/chat/${noteId}`, "GET") as Promise<{
     messages: PersistedChatMessage[];
+    preferredLanguage?: string;
   }>;
 }
 

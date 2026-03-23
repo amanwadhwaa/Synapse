@@ -3,6 +3,10 @@ import prisma from "../prisma";
 import { AuthRequest, authMiddleware } from "../middleware/auth";
 import { chatWithNotes } from "../services/aiService";
 import type { ChatMessage as AIChatMessage } from "../services/aiService";
+import {
+  getPreferredLanguage,
+  normalizePreferredLanguage,
+} from "../services/preferredLanguage";
 
 const router = express.Router();
 
@@ -22,6 +26,8 @@ router.get("/:noteId", authMiddleware, async (req: AuthRequest, res) => {
       return res.status(404).json({ error: "Note not found" });
     }
 
+    const preferredLanguage = await getPreferredLanguage(req.user!.id);
+
     const messages = await prisma.chatMessage.findMany({
       where: {
         noteId,
@@ -32,7 +38,7 @@ router.get("/:noteId", authMiddleware, async (req: AuthRequest, res) => {
       },
     });
 
-    return res.json({ messages });
+    return res.json({ messages, preferredLanguage });
   } catch (error) {
     console.error("FETCH CHAT HISTORY ERROR:", error);
     return res.status(500).json({ error: "Failed to fetch chat history" });
@@ -42,7 +48,10 @@ router.get("/:noteId", authMiddleware, async (req: AuthRequest, res) => {
 router.post("/:noteId", authMiddleware, async (req: AuthRequest, res) => {
   try {
     const noteId = String(req.params.noteId || "");
-    const { message } = req.body as { message?: string };
+    const { message, preferredLanguage } = req.body as {
+      message?: string;
+      preferredLanguage?: string;
+    };
 
     if (!message || !message.trim()) {
       return res.status(400).json({ error: "message is required" });
@@ -99,10 +108,15 @@ router.post("/:noteId", authMiddleware, async (req: AuthRequest, res) => {
         content: entry.content,
       }));
 
+    const resolvedPreferredLanguage = preferredLanguage?.trim()
+      ? normalizePreferredLanguage(preferredLanguage)
+      : await getPreferredLanguage(req.user!.id);
+
     const assistantResponse = await chatWithNotes(
       note.rawText,
       message.trim(),
       conversationHistory,
+      resolvedPreferredLanguage,
     );
 
     const assistantMessage = await prisma.chatMessage.create({

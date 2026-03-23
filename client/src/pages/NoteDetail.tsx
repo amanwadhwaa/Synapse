@@ -31,7 +31,7 @@ interface Note {
   subject?: { name: string };
   rawText: string;
   extractedText?: string;
-  sourceType: "TYPED" | "IMAGE" | "AUDIO" | "PDF";
+  sourceType: "TYPED" | "IMAGE" | "AUDIO" | "PDF" | "VOICE";
   fileUrl?: string;
   createdAt: string;
   title?: string;
@@ -50,6 +50,12 @@ interface ChatMessage {
   createdAt?: string;
 }
 
+const aiDisclaimerText =
+  "SYNAPSE is AI and can make mistakes. Please double-check responses.";
+
+const aiDisclaimerClassName =
+  "mt-2 text-center text-xs text-gray-500";
+
 const NoteDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -58,6 +64,7 @@ const NoteDetail: React.FC = () => {
   const [aiResponses, setAiResponses] = useState<AIResponse[]>([]);
   const [processingAI, setProcessingAI] = useState<string | null>(null);
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
+  const [chatPreferredLanguage, setChatPreferredLanguage] = useState("English");
   const [chatInput, setChatInput] = useState("");
   const [isChatting, setIsChatting] = useState(false);
   const [loadingChatHistory, setLoadingChatHistory] = useState(false);
@@ -164,6 +171,7 @@ const NoteDetail: React.FC = () => {
       case "IMAGE":
         return <BookOpen className="h-5 w-5" />;
       case "AUDIO":
+      case "VOICE":
         return <BookOpen className="h-5 w-5" />;
       case "PDF":
         return <FileIcon className="h-5 w-5" />;
@@ -214,7 +222,11 @@ const NoteDetail: React.FC = () => {
     setIsChatting(true);
 
     try {
-      const response = await chatWithNote(id, trimmedMessage);
+      const response = await chatWithNote(
+        id,
+        trimmedMessage,
+        chatPreferredLanguage,
+      );
 
       if (response?.assistantMessage) {
         setChatMessages((prev) => [
@@ -237,6 +249,7 @@ const NoteDetail: React.FC = () => {
     try {
       const response = await getChatHistory(noteId);
       setChatMessages(response.messages || []);
+      setChatPreferredLanguage(response.preferredLanguage || "English");
     } catch (error) {
       console.error(error);
       toast.error("Failed to load chat history");
@@ -365,12 +378,18 @@ const NoteDetail: React.FC = () => {
               </div>
             </div>
 
+            {note.sourceType === "VOICE" && (
+              <p className="mb-4 rounded-lg border border-blue-400/20 bg-blue-500/10 px-3 py-2 text-xs text-blue-200">
+                This note was recorded in another language and translated to English
+              </p>
+            )}
+
             {/* AI Actions */}
             <div className="space-y-4">
               {/* Simplify Level Slider */}
               <div className="bg-white/5 rounded-lg p-4 border border-white/10">
                 <div className="flex items-center justify-between mb-2">
-                  <label className="text-sm font-medium text-gray-300">AI Complexity Level</label>
+                  <label className="text-sm font-medium text-gray-300">Tone</label>
                   <span className="text-sm text-purple-300 font-semibold">{getLevelLabel(simplifyLevel)}</span>
                 </div>
                 <input
@@ -397,10 +416,10 @@ const NoteDetail: React.FC = () => {
               <button
                 onClick={() => handleAIAction("simplify")}
                 disabled={processingAI === "simplify"}
-                className="flex items-center space-x-2 bg-purple-500/20 hover:bg-purple-500/30 text-purple-300 px-4 py-2 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex items-center space-x-2 border border-white/20 bg-blue-500/20 hover:bg-blue-500/30 text-blue-300 px-4 py-2 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {processingAI === "simplify" ? (
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-purple-300"></div>
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-300"></div>
                 ) : (
                   <Sparkles className="h-4 w-4" />
                 )}
@@ -410,7 +429,7 @@ const NoteDetail: React.FC = () => {
               <button
                 onClick={() => handleAIAction("summarize")}
                 disabled={processingAI === "summarize"}
-                className="flex items-center space-x-2 bg-blue-500/20 hover:bg-blue-500/30 text-blue-300 px-4 py-2 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex items-center space-x-2 border border-white/20 bg-blue-500/20 hover:bg-blue-500/30 text-blue-300 px-4 py-2 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {processingAI === "summarize" ? (
                   <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-300"></div>
@@ -423,10 +442,10 @@ const NoteDetail: React.FC = () => {
               <button
                 onClick={() => handleAIAction("quiz")}
                 disabled={processingAI === "quiz"}
-                className="flex items-center space-x-2 bg-green-500/20 hover:bg-green-500/30 text-green-300 px-4 py-2 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex items-center space-x-2 border border-white/20 bg-blue-500/20 hover:bg-blue-500/30 text-blue-300 px-4 py-2 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {processingAI === "quiz" ? (
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-green-300"></div>
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-300"></div>
                 ) : (
                   <BookOpen className="h-4 w-4" />
                 )}
@@ -464,11 +483,12 @@ const NoteDetail: React.FC = () => {
                       {response.timestamp.toLocaleTimeString()}
                     </span>
                   </div>
-                  <div className="prose prose-invert max-w-none">
-                    <pre className="text-gray-300 whitespace-pre-wrap leading-relaxed">
-                      {response.content}
-                    </pre>
+                  <div className="text-gray-200 [&_strong]:font-bold [&_h1]:text-xl [&_h1]:font-semibold [&_h1]:mb-3 [&_h2]:text-lg [&_h2]:font-semibold [&_h2]:mb-2 [&_h3]:text-base [&_h3]:font-semibold [&_h3]:mb-2 [&_ul]:list-disc [&_ul]:pl-6 [&_ol]:list-decimal [&_ol]:pl-6 [&_li]:my-1 [&_pre]:rounded-md [&_pre]:bg-slate-950 [&_pre]:p-3 [&_pre]:overflow-x-auto [&_pre]:border [&_pre]:border-white/10 [&_code]:font-mono [&_code]:text-[13px] [&_table]:w-full [&_table]:border-collapse [&_table]:text-sm [&_th]:border [&_th]:border-white/20 [&_th]:bg-white/10 [&_th]:px-3 [&_th]:py-2 [&_td]:border [&_td]:border-white/10 [&_td]:px-3 [&_td]:py-2">
+                    <ReactMarkdown>{response.content}</ReactMarkdown>
                   </div>
+                  {(response.type === "simplify" || response.type === "summarize") && (
+                    <p className={aiDisclaimerClassName}>{aiDisclaimerText}</p>
+                  )}
                 </div>
               ))}
             </div>
@@ -555,7 +575,7 @@ const NoteDetail: React.FC = () => {
               <div ref={chatBottomRef} />
             </div>
 
-            <div className="p-4 border-t border-white/10">
+            <div className="p-4 pt-2 border-t border-white/10">
               <div className="flex items-center gap-2">
                 <input
                   type="text"
@@ -582,6 +602,7 @@ const NoteDetail: React.FC = () => {
                   <Send className="h-4 w-4" />
                 </button>
               </div>
+              <p className={aiDisclaimerClassName}>{aiDisclaimerText}</p>
             </div>
           </div>
         </aside>

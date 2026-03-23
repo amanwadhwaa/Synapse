@@ -144,7 +144,9 @@ router.put("/profile", authMiddleware, async (req: MiddlewareAuthRequest, res) =
         ...(name !== undefined ? { name: name.trim() } : {}),
         ...(institution !== undefined ? { institution: institution.trim() || null } : {}),
         ...(grade !== undefined ? { grade: grade.trim() || null } : {}),
-        ...(language !== undefined ? { language: language.trim().toLowerCase() } : {}),
+        ...(language !== undefined
+          ? { language: language.trim().toLowerCase() || "english" }
+          : {}),
       },
       select: {
         id: true,

@@ -17,6 +17,34 @@ router.get('/', authMiddleware, async (req: AuthRequest, res) => {
   }
 });
 
+router.get('/from-notes', authMiddleware, async (req: AuthRequest, res) => {
+  try {
+    const userId = req.user.id;
+    const subjects = await prisma.subject.findMany({
+      where: {
+        userId,
+        notes: {
+          some: {
+            userId,
+          },
+        },
+      },
+      select: {
+        id: true,
+        name: true,
+      },
+      orderBy: {
+        name: 'asc',
+      },
+    });
+
+    res.json(subjects);
+  } catch (error) {
+    console.error('Subjects from notes fetch error:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
 router.post('/', authMiddleware, async (req: AuthRequest, res) => {
   try {
     const { name, examDate, confidenceLevel } = req.body;

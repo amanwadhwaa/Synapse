@@ -1,4 +1,8 @@
 import { azureOpenAIClient, azureOpenAIModel } from "./azureOpenAI";
+import {
+  buildPreferredLanguageInstruction,
+  normalizePreferredLanguage,
+} from "./preferredLanguage";
 
 function trimText(text: string, maxChars = 4000) {
   if (text.length <= maxChars) return text;
@@ -24,10 +28,26 @@ export interface GeneratedQuizQuestion {
   explanation: string;
 }
 
-export async function callAI(prompt: string) {
+export async function callAI(
+  prompt: string,
+  options?: {
+    preferredLanguage?: string;
+    systemPrompt?: string;
+  },
+) {
+  const preferredLanguage = normalizePreferredLanguage(options?.preferredLanguage);
+  const languageInstruction = buildPreferredLanguageInstruction(preferredLanguage);
+  const systemPrompt = options?.systemPrompt?.trim();
+
   const completion = await azureOpenAIClient.chat.completions.create({
     model: azureOpenAIModel,
     messages: [
+      {
+        role: "system",
+        content: systemPrompt
+          ? `${languageInstruction}\n\n${systemPrompt}`
+          : languageInstruction,
+      },
       {
         role: "user",
         content: prompt,
@@ -38,7 +58,11 @@ export async function callAI(prompt: string) {
   return completion.choices[0].message.content || "No response";
 }
 
-export async function simplifyText(text: string, level: number = 3) {
+export async function simplifyText(
+  text: string,
+  level: number = 3,
+  preferredLanguage?: string,
+) {
   const cleaned = cleanOCR(trimText(text));
 
   const levelDescriptions = {
@@ -68,10 +92,17 @@ Notes:
 ${cleaned}
 `;
 
-  return callAI(prompt);
+  return callAI(prompt, {
+    preferredLanguage,
+    systemPrompt: "You are an expert tutor helping a student understand difficult study notes.",
+  });
 }
 
-export async function summarizeText(text: string, level: number = 3) {
+export async function summarizeText(
+  text: string,
+  level: number = 3,
+  preferredLanguage?: string,
+) {
   const cleaned = cleanOCR(trimText(text));
 
   const levelDescriptions = {
@@ -100,7 +131,10 @@ Notes:
 ${cleaned}
 `;
 
-  return callAI(prompt);
+  return callAI(prompt, {
+    preferredLanguage,
+    systemPrompt: "You are summarizing study notes for exam revision.",
+  });
 }
 
 export async function generateQuiz(text: string) {
@@ -201,8 +235,11 @@ function extractJsonArray(text: string): unknown {
 export async function generateQuizQuestions(
   text: string,
   level: number = 3,
+  preferredLanguage?: string,
 ): Promise<GeneratedQuizQuestion[]> {
   const cleaned = cleanOCR(trimText(text, 7000));
+  const resolvedLanguage = normalizePreferredLanguage(preferredLanguage);
+  const languageInstruction = buildPreferredLanguageInstruction(resolvedLanguage);
 
   const levelDescriptions = {
     1: "very simple, basic concepts, easy vocabulary",
@@ -219,12 +256,13 @@ export async function generateQuizQuestions(
     messages: [
       {
         role: "system",
-        content:
-          "You are an expert educator who creates high-quality multiple-choice quizzes.",
+        content: `${languageInstruction}\n\nYou are an expert educator who creates high-quality multiple-choice quizzes.`,
       },
       {
         role: "user",
         content: `Create exactly 5 multiple-choice questions from the notes below at a ${levelPrompt} difficulty level.
+
+Generate the quiz in ${resolvedLanguage}. If a question involves language-specific content (e.g. idioms, proverbs, poetry in another language), include the original in its native script but phrase the question and all other options in ${resolvedLanguage}.
 
 Return ONLY valid JSON as an array with this exact schema:
 [
@@ -271,9 +309,12 @@ export async function chatWithNotes(
   noteContent: string,
   message: string,
   conversationHistory: ChatMessage[],
+  preferredLanguage?: string,
 ) {
   const sanitizedNote = cleanOCR(trimText(noteContent, 7000));
   const sanitizedMessage = message.trim();
+  const resolvedLanguage = normalizePreferredLanguage(preferredLanguage);
+  const languageInstruction = buildPreferredLanguageInstruction(resolvedLanguage);
 
   const historyMessages = conversationHistory
     .filter((entry) => entry.content && entry.content.trim())
@@ -287,7 +328,7 @@ export async function chatWithNotes(
     messages: [
       {
         role: "system",
-        content: `You are a helpful study assistant. The student is studying the following notes: ${sanitizedNote}. Answer their questions clearly and helpfully based on these notes and your knowledge.`,
+        content: `${languageInstruction}\n\nYou are a helpful study assistant. The student is studying the following notes: ${sanitizedNote}. You can understand user messages in any language, but you must always reply in ${resolvedLanguage}. Answer their questions clearly and helpfully based on these notes and your knowledge.`,
       },
       ...historyMessages,
       {
@@ -300,23 +341,12 @@ export async function chatWithNotes(
   return completion.choices[0].message.content || "I could not generate a response.";
 }
 
-export async function speakText(text: string) {
+export async function speakText(text: string, preferredLanguage?: string) {
   const cleaned = cleanOCR(trimText(text, 7000));
 
-  const completion = await azureOpenAIClient.chat.completions.create({
-    model: azureOpenAIModel,
-    messages: [
-      {
-        role: "system",
-        content:
-          "You are a clear and concise study narrator. Rewrite text into a natural spoken script suitable for text-to-speech.",
-      },
-      {
-        role: "user",
-        content: `Convert the following study content into spoken narration while preserving meaning:\n\n${cleaned}`,
-      },
-    ],
+  return callAI(`Convert the following study content into spoken narration while preserving meaning:\n\n${cleaned}`, {
+    preferredLanguage,
+    systemPrompt:
+      "You are a clear and concise study narrator. Rewrite text into a natural spoken script suitable for text-to-speech.",
   });
-
-  return completion.choices[0].message.content || "I could not generate a spoken response.";
 }

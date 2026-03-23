@@ -2,6 +2,7 @@ import express from "express";
 import prisma from "../prisma";
 import { AuthRequest, authMiddleware } from "../middleware/auth";
 import { callAI } from "../services/aiService";
+import { getPreferredLanguage } from "../services/preferredLanguage";
 
 interface StoredQuizQuestion {
   question?: unknown;
@@ -15,6 +16,8 @@ const parseQuestions = (raw: unknown): StoredQuizQuestion[] => {
 };
 
 const router = express.Router();
+
+// ===== SPECIFIC NAMED ROUTES (must come before generic routes) =====
 
 router.get("/stats", authMiddleware, async (req: AuthRequest, res) => {
   try {
@@ -56,60 +59,10 @@ router.get("/stats", authMiddleware, async (req: AuthRequest, res) => {
   }
 });
 
-router.get("/", authMiddleware, async (req: AuthRequest, res) => {
-  try {
-    const userId = req.user!.id;
-
-    const quizzes = await prisma.quiz.findMany({
-      where: { userId },
-      include: {
-        note: {
-          select: {
-            title: true,
-            subject: {
-              select: {
-                name: true,
-              },
-            },
-          },
-        },
-        attempts: {
-          where: { userId },
-          select: { score: true, completedAt: true },
-        },
-      },
-      orderBy: { createdAt: "desc" },
-    });
-
-    const payload = quizzes.map((quiz) => {
-      const questionCount = Array.isArray(quiz.questions)
-        ? quiz.questions.length
-        : 0;
-      const bestScore =
-        quiz.attempts.length > 0
-          ? Math.max(...quiz.attempts.map((attempt) => attempt.score))
-          : null;
-
-      return {
-        id: quiz.id,
-        createdAt: quiz.createdAt,
-        subjectName: quiz.note?.subject?.name || "General",
-        noteTitle: quiz.note?.title || "Untitled Note",
-        questionCount,
-        bestScore,
-      };
-    });
-
-    res.json(payload);
-  } catch (error) {
-    console.error("FETCH QUIZZES ERROR:", error);
-    res.status(500).json({ error: "Failed to fetch quizzes" });
-  }
-});
 router.get("/performance", authMiddleware, async (req: AuthRequest, res) => {
   try {
     const userId = req.user!.id;
-    const { callAI } = await import("../services/aiService");
+    const preferredLanguage = await getPreferredLanguage(userId);
 
     // Fetch all quiz attempts for the user with more details
     const attempts = await prisma.quizAttempt.findMany({
@@ -208,7 +161,7 @@ router.get("/performance", authMiddleware, async (req: AuthRequest, res) => {
 Wrong answers were on these topics: ${wrongTopics.join(', ')}.
 Score: ${attempt.score}/${totalQuestions}.
 Give exactly 2 sentences: one identifying the weak concept, one giving a specific study tip.`;
-          aiInsight = await callAI(insightPrompt);
+          aiInsight = await callAI(insightPrompt, { preferredLanguage });
         } catch (error) {
           console.error("AI Insight error:", error);
           aiInsight = "Unable to generate insight at this moment.";
@@ -293,7 +246,7 @@ Be specific with topic names, not generic advice.`;
 
     let aiAnalysis = "";
     try {
-      aiAnalysis = await callAI(aiPrompt);
+      aiAnalysis = await callAI(aiPrompt, { preferredLanguage });
     } catch (error) {
       console.error("AI Analysis error:", error);
       aiAnalysis = "Unable to generate AI analysis at this moment.";
@@ -326,12 +279,10 @@ Be specific with topic names, not generic advice.`;
   }
 });
 
-
-
 router.get("/brain-fatigue", authMiddleware, async (req: AuthRequest, res) => {
   try {
     const userId = req.user!.id;
-    const { callAI } = await import("../services/aiService");
+    const preferredLanguage = await getPreferredLanguage(userId);
 
     // Fetch all quiz attempts for the user
     const attempts = await prisma.quizAttempt.findMany({
@@ -466,7 +417,7 @@ Be specific with times and days. Maximum 4 sentences.`;
 
     let aiInsight = "";
     try {
-      aiInsight = await callAI(aiPrompt);
+      aiInsight = await callAI(aiPrompt, { preferredLanguage });
     } catch (error) {
       console.error("AI Brain Fatigue Insight error:", error);
       aiInsight = "Unable to generate neuroscience insights at this moment.";
@@ -491,6 +442,7 @@ Be specific with times and days. Maximum 4 sentences.`;
 router.get("/forgetting-curve", authMiddleware, async (req: AuthRequest, res) => {
   try {
     const userId = req.user!.id;
+    const preferredLanguage = await getPreferredLanguage(userId);
 
     // Fetch all quiz attempts with quiz and subject info
     const attempts = await prisma.quizAttempt.findMany({
@@ -616,7 +568,7 @@ Tell them exactly which subject to review today and why. Maximum 4 sentences. Be
 
     let aiInsight = "";
     try {
-      aiInsight = await callAI(aiPrompt);
+      aiInsight = await callAI(aiPrompt, { preferredLanguage });
     } catch (error) {
       console.error("AI Forgetting Curve Insight error:", error);
       aiInsight = "Unable to generate memory insights at this moment.";
@@ -632,6 +584,60 @@ Tell them exactly which subject to review today and why. Maximum 4 sentences. Be
     res.status(500).json({ error: "Failed to fetch forgetting curve data" });
   }
 });
+
+// ===== GENERIC ROUTES (must come after specific named routes) =====
+
+router.get("/", authMiddleware, async (req: AuthRequest, res) => {
+  try {
+    const userId = req.user!.id;
+
+    const quizzes = await prisma.quiz.findMany({
+      where: { userId },
+      include: {
+        note: {
+          select: {
+            title: true,
+            subject: {
+              select: {
+                name: true,
+              },
+            },
+          },
+        },
+        attempts: {
+          where: { userId },
+          select: { score: true, completedAt: true },
+        },
+      },
+      orderBy: { createdAt: "desc" },
+    });
+
+    const payload = quizzes.map((quiz) => {
+      const questionCount = Array.isArray(quiz.questions)
+        ? quiz.questions.length
+        : 0;
+      const bestScore =
+        quiz.attempts.length > 0
+          ? Math.max(...quiz.attempts.map((attempt) => attempt.score))
+          : null;
+
+      return {
+        id: quiz.id,
+        createdAt: quiz.createdAt,
+        subjectName: quiz.note?.subject?.name || "General",
+        noteTitle: quiz.note?.title || "Untitled Note",
+        questionCount,
+        bestScore,
+      };
+    });
+
+    res.json(payload);
+  } catch (error) {
+    console.error("FETCH QUIZZES ERROR:", error);
+    res.status(500).json({ error: "Failed to fetch quizzes" });
+  }
+});
+
 router.get("/:id", authMiddleware, async (req: AuthRequest, res) => {
   try {
     const userId = req.user!.id;

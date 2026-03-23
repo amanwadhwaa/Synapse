@@ -450,6 +450,9 @@ export default function Profile() {
                     </option>
                   ))}
                 </select>
+                <p className="mt-2 text-xs text-gray-400">
+                  This language will be used for all AI responses including summaries, quizzes, and chat.
+                </p>
               </div>
 
               <div>
