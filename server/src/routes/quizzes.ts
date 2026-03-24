@@ -237,12 +237,13 @@ Give exactly 2 sentences: one identifying the weak concept, one giving a specifi
     };
 
     const aiPrompt = `You are a precise study coach. Here is a student's complete quiz history broken down by subject and topic: ${JSON.stringify(analysisData)}.
-Give a 4-5 sentence analysis covering:
-1. Overall performance trend
-2. Strongest subject and why
-3. Weakest subject with specific weak topics
-4. Concrete daily study recommendations
-Be specific with topic names, not generic advice.`;
+      Format your response as short bullet points using markdown. Cover exactly these 4 points in 1 line each:
+      - **Trend**: one line summary
+      - **Strongest**: subject name and one reason
+      - **Weakest**: subject name and specific weak topics
+      - **Focus on**: one concrete daily action
+
+      Maximum 1 sentence per bullet. Be specific, no fluff.`;
 
     let aiAnalysis = "";
     try {

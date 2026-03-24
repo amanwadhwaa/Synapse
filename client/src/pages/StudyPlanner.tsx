@@ -14,7 +14,7 @@ export default function StudyPlanner() {
   useEffect(() => {
     const fetchExams = async () => {
       const res = await fetch(
-        `http://localhost:5000/api/exams?userId=${user?.id}`,
+        `/api/exams?userId=${user?.id}`,
       );
       const data = await res.json();
       setExams(data);
@@ -24,7 +24,7 @@ export default function StudyPlanner() {
   }, [user]);
 
   const deleteExam = async (id: string) => {
-    await fetch(`http://localhost:5000/api/exams/${id}`, {
+    await fetch(`/api/exams/${id}`, {
       method: "DELETE",
     });
 
