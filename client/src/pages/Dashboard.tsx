@@ -39,6 +39,10 @@ function Dashboard() {
   const [isStartModalOpen, setIsStartModalOpen] = useState(false);
   const { data: performanceData, isLoading: performanceLoading, isRevalidating } = usePerformanceData();
   const [isFabOpen, setIsFabOpen] = useState(false);
+  const [isGroupStudyModalOpen, setIsGroupStudyModalOpen] = useState(false);
+  const [isGroupLinkCopied, setIsGroupLinkCopied] = useState(false);
+
+  const groupStudyLink = "https://teams.microsoft.com/meetup-join/19%3ameeting_OTY0NjAwYm";
 
   const startStudySession = () => {
     setIsStartModalOpen(true);
@@ -50,30 +54,50 @@ function Dashboard() {
       icon: FileText,
       angle: 90,
       onClick: () => navigate("/notes"),
-      disabled: false,
     },
     {
       label: "Solo Session",
       icon: Play,
       angle: 120,
       onClick: () => startStudySession(),
-      disabled: false,
     },
     {
       label: "Group Study",
       icon: Users,
       angle: 150,
-      onClick: () => undefined,
-      disabled: true,
+      onClick: () => setIsGroupStudyModalOpen(true),
     },
     {
       label: "Take Quiz",
       icon: BookOpen,
       angle: 180,
       onClick: () => navigate("/quizzes"),
-      disabled: false,
     },
   ];
+
+  const handleCopyGroupStudyLink = async () => {
+    try {
+      await navigator.clipboard.writeText(groupStudyLink);
+      setIsGroupLinkCopied(true);
+      setTimeout(() => {
+        setIsGroupLinkCopied(false);
+      }, 2000);
+    } catch (error) {
+      console.error("Failed to copy group study link", error);
+    }
+  };
+
+  const handleDownloadGroupStudyLink = () => {
+    const blob = new Blob([groupStudyLink], { type: "text/plain;charset=utf-8" });
+    const fileUrl = URL.createObjectURL(blob);
+    const anchor = document.createElement("a");
+    anchor.href = fileUrl;
+    anchor.download = "synapse_group_study.txt";
+    document.body.appendChild(anchor);
+    anchor.click();
+    document.body.removeChild(anchor);
+    URL.revokeObjectURL(fileUrl);
+  };
 
   const handleStartSession = async (payload: {
     subjectId: string | null;
@@ -138,17 +162,10 @@ function Dashboard() {
                 <button
                   type="button"
                   onClick={() => {
-                    if (action.disabled) return;
                     setIsFabOpen(false);
                     action.onClick();
                   }}
-                  disabled={action.disabled}
-                  title={action.disabled ? "Coming Soon" : undefined}
-                  className={
-                    action.disabled
-                      ? "w-12 h-12 rounded-full bg-white/15 text-gray-400 border border-white/20 flex items-center justify-center shadow-lg cursor-not-allowed"
-                      : "w-12 h-12 rounded-full bg-[var(--color-primary)] hover:bg-blue-600 text-white border border-white/20 flex items-center justify-center shadow-lg transition-colors duration-200"
-                  }
+                  className="w-12 h-12 rounded-full bg-[var(--color-primary)] hover:bg-blue-600 text-white border border-white/20 flex items-center justify-center shadow-lg transition-colors duration-200"
                 >
                   <Icon className="h-5 w-5" />
                 </button>
@@ -162,11 +179,6 @@ function Dashboard() {
                 >
                   {action.label}
                 </span>
-                {action.disabled && (
-                  <div className="absolute -top-9 px-2 py-1 rounded bg-black/90 text-white text-[11px] opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap">
-                    Coming Soon
-                  </div>
-                )}
               </div>
             </div>
           );
@@ -191,6 +203,64 @@ function Dashboard() {
         onClose={() => setIsStartModalOpen(false)}
         onStart={handleStartSession}
       />
+
+      {isGroupStudyModalOpen && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 p-4">
+          <div className="w-full max-w-2xl rounded-2xl border border-white/20 bg-slate-900 p-6 shadow-2xl">
+            <h3 className="text-2xl font-bold text-white">Group Study Room</h3>
+            <p className="mt-1 text-sm text-gray-300">Join your study group on Microsoft Teams</p>
+
+            <div className="mt-5 rounded-xl border border-white/10 bg-white/5 p-4">
+              <label className="mb-2 block text-xs font-semibold uppercase tracking-wide text-gray-400">
+                Teams Link
+              </label>
+              <div className="flex flex-col gap-3 md:flex-row md:items-center">
+                <input
+                  type="text"
+                  readOnly
+                  value={groupStudyLink}
+                  className="flex-1 rounded-lg border border-white/15 bg-slate-950/70 px-3 py-2 text-sm text-gray-200 outline-none"
+                />
+                <button
+                  type="button"
+                  onClick={() => {
+                    void handleCopyGroupStudyLink();
+                  }}
+                  className="rounded-lg border border-white/20 bg-white/5 px-3 py-2 text-sm font-medium text-white hover:bg-white/10 transition-colors"
+                >
+                  {isGroupLinkCopied ? "✅ Copied!" : "Copy Link"}
+                </button>
+                <button
+                  type="button"
+                  onClick={handleDownloadGroupStudyLink}
+                  className="rounded-lg border border-white/20 bg-white/5 px-3 py-2 text-sm font-medium text-white hover:bg-white/10 transition-colors"
+                >
+                  Download Link
+                </button>
+              </div>
+            </div>
+
+            <div className="mt-6 flex flex-wrap justify-end gap-3">
+              <button
+                type="button"
+                onClick={() => {
+                  window.open(groupStudyLink, "_blank", "noopener,noreferrer");
+                }}
+                className="rounded-lg bg-[var(--color-primary)] px-4 py-2 text-sm font-semibold text-white hover:bg-blue-600 transition-colors"
+              >
+                Open in Teams
+              </button>
+              <button
+                type="button"
+                onClick={() => setIsGroupStudyModalOpen(false)}
+                className="rounded-lg border border-white/20 bg-white/5 px-4 py-2 text-sm font-medium text-white hover:bg-white/10 transition-colors"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <div className="max-w-7xl mx-auto">
         {/* Header */}

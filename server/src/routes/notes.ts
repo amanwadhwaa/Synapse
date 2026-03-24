@@ -26,6 +26,9 @@ const ENGLISH_CHECK_PROMPT =
 const TRANSLATE_TO_ENGLISH_SYSTEM_PROMPT =
   "You are a translator. Translate the following text to English accurately and naturally. Return only the translated text, nothing else.";
 
+const TOPICS_PREREQUISITES_SYSTEM_PROMPT =
+  "Analyze the following note content and return a JSON object with exactly this structure, no other text:\n{\n  relatedTopics: string[],      // 4-6 related topics the student could explore\n  prerequisites: string[]       // 3-5 concepts the student should know before studying this\n}\nKeep each item short (3-6 words max). Be specific to the actual content.";
+
 const voiceMap: Record<string, string> = {
   English: "en-US-BrianNeural",
   Hindi: "hi-IN-MadhurNeural",
@@ -164,6 +167,45 @@ async function generateAudioLectureScript({
   });
 
   return (completion.choices[0]?.message?.content || "").trim();
+}
+
+function parseTopicsAndPrerequisites(rawContent: string): {
+  relatedTopics: string[];
+  prerequisites: string[];
+} {
+  const trimmed = rawContent.trim();
+  const withoutFences = trimmed
+    .replace(/^```(?:json)?\s*/i, "")
+    .replace(/\s*```$/, "")
+    .trim();
+
+  const parsed = JSON.parse(withoutFences) as {
+    relatedTopics?: unknown;
+    prerequisites?: unknown;
+  };
+
+  const relatedTopics = Array.isArray(parsed.relatedTopics)
+    ? parsed.relatedTopics
+        .filter((item): item is string => typeof item === "string")
+        .map((item) => item.trim())
+        .filter(Boolean)
+    : [];
+
+  const prerequisites = Array.isArray(parsed.prerequisites)
+    ? parsed.prerequisites
+        .filter((item): item is string => typeof item === "string")
+        .map((item) => item.trim())
+        .filter(Boolean)
+    : [];
+
+  if (!relatedTopics.length || !prerequisites.length) {
+    throw new Error("Invalid topics/prerequisites payload from model");
+  }
+
+  return {
+    relatedTopics,
+    prerequisites,
+  };
 }
 
 function getVoiceForLanguage(preferredLanguage: string): string {
@@ -859,6 +901,54 @@ router.post("/:id/audio-lecture", authMiddleware, async (req: AuthRequest, res) 
   } catch (error) {
     console.error("AUDIO LECTURE ERROR:", error);
     return res.status(500).json({ error: "Failed to generate audio lecture" });
+  }
+});
+
+router.get("/:id/topics-prerequisites", authMiddleware, async (req: AuthRequest, res) => {
+  try {
+    const noteId = String(req.params.id || "");
+    const userId = req.user!.id;
+
+    const note = await prisma.note.findFirst({
+      where: {
+        id: noteId,
+        userId,
+      },
+      select: {
+        rawText: true,
+      },
+    });
+
+    if (!note) {
+      return res.status(404).json({ error: "Note not found" });
+    }
+
+    const preferredLanguage = normalizePreferredLanguage(
+      await getPreferredLanguage(userId),
+    );
+
+    const completion = await azureOpenAIClient.chat.completions.create({
+      model: azureOpenAIModel,
+      response_format: { type: "json_object" },
+      messages: [
+        {
+          role: "system",
+          content: TOPICS_PREREQUISITES_SYSTEM_PROMPT,
+        },
+        {
+          role: "user",
+          content: `Preferred language: ${preferredLanguage}.\n\nNote content:\n${note.rawText}`,
+        },
+      ],
+    });
+
+    const rawResponse = (completion.choices[0]?.message?.content || "").trim();
+    const parsedResponse = parseTopicsAndPrerequisites(rawResponse);
+
+    return res.json(parsedResponse);
+  } catch (error) {
+    console.error("FETCH NOTE TOPICS/PREREQUISITES ERROR:", error);
+    return res.status(500).json({ error: "Failed to fetch related topics and prerequisites" });
   }
 });
 

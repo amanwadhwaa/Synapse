@@ -1177,8 +1177,8 @@ const Notes: React.FC = () => {
             onClick={() => fileInputRef.current?.click()}
           >
             <Upload className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-            <p className="text-white text-lg mb-2">Upload an image or PDF to extract text</p>
-            <p className="text-gray-400">Drag and drop an image or PDF here, or click to browse</p>
+            <p className="text-white text-lg mb-2">Upload an image, PDF or PPT to analyse</p>
+            <p className="text-gray-400">Drag and drop an image, PDF or PPT here, or click to browse</p>
             <input
               ref={fileInputRef}
               type="file"

@@ -58,11 +58,23 @@ interface ChatMessage {
   createdAt?: string;
 }
 
+interface TopicsPrerequisites {
+  relatedTopics: string[];
+  prerequisites: string[];
+}
+
+interface TopicsPrerequisitesCache {
+  timestamp: number;
+  data: TopicsPrerequisites;
+}
+
 const aiDisclaimerText =
   "SYNAPSE is AI and can make mistakes. Please double-check responses.";
 
 const aiDisclaimerClassName =
   "mt-2 text-center text-xs text-gray-500";
+
+const TOPICS_CACHE_TTL_MS = 60 * 60 * 1000;
 
 const NoteDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -90,13 +102,21 @@ const NoteDetail: React.FC = () => {
   const [lectureDuration, setLectureDuration] = useState(0);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [deletingNote, setDeletingNote] = useState(false);
+  const [topicsPrerequisites, setTopicsPrerequisites] =
+    useState<TopicsPrerequisites | null>(null);
+  const [loadingTopicsPrerequisites, setLoadingTopicsPrerequisites] = useState(false);
   const chatBottomRef = useRef<HTMLDivElement | null>(null);
   const lectureAudioRef = useRef<HTMLAudioElement | null>(null);
+
+  const getTopicsCacheKey = (noteId: string) => `synapse_topics_${noteId}`;
 
   useEffect(() => {
     if (id) {
       fetchNote();
+      void fetchTopicsPrerequisites(id);
       void fetchChatHistory(id);
+    } else {
+      setTopicsPrerequisites(null);
     }
   }, [id]);
 
@@ -137,6 +157,72 @@ const NoteDetail: React.FC = () => {
       toast.error("Failed to fetch note");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchTopicsPrerequisites = async (noteId: string) => {
+    setLoadingTopicsPrerequisites(true);
+
+    const cacheKey = getTopicsCacheKey(noteId);
+
+    try {
+      const cachedValue = localStorage.getItem(cacheKey);
+
+      if (cachedValue) {
+        try {
+          const parsedCache = JSON.parse(cachedValue) as TopicsPrerequisitesCache;
+          const cacheAge = Date.now() - parsedCache.timestamp;
+          const hasValidPayload =
+            Array.isArray(parsedCache.data?.relatedTopics) &&
+            Array.isArray(parsedCache.data?.prerequisites);
+
+          if (hasValidPayload && cacheAge < TOPICS_CACHE_TTL_MS) {
+            setTopicsPrerequisites(parsedCache.data);
+            setLoadingTopicsPrerequisites(false);
+            return;
+          }
+        } catch {
+          localStorage.removeItem(cacheKey);
+        }
+      }
+
+      const response = await fetch(`/api/notes/${noteId}/topics-prerequisites`, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to fetch topics/prerequisites");
+      }
+
+      const payload = (await response.json()) as TopicsPrerequisites;
+      const normalizedPayload: TopicsPrerequisites = {
+        relatedTopics: Array.isArray(payload.relatedTopics)
+          ? payload.relatedTopics.filter((item): item is string => typeof item === "string")
+          : [],
+        prerequisites: Array.isArray(payload.prerequisites)
+          ? payload.prerequisites.filter((item): item is string => typeof item === "string")
+          : [],
+      };
+
+      if (!normalizedPayload.relatedTopics.length && !normalizedPayload.prerequisites.length) {
+        setTopicsPrerequisites(null);
+        return;
+      }
+
+      setTopicsPrerequisites(normalizedPayload);
+      localStorage.setItem(
+        cacheKey,
+        JSON.stringify({
+          timestamp: Date.now(),
+          data: normalizedPayload,
+        } satisfies TopicsPrerequisitesCache),
+      );
+    } catch {
+      setTopicsPrerequisites(null);
+    } finally {
+      setLoadingTopicsPrerequisites(false);
     }
   };
 
@@ -751,6 +837,56 @@ const NoteDetail: React.FC = () => {
               <ReactMarkdown>{note.rawText}</ReactMarkdown>
             </div>
           </div>
+
+          {(loadingTopicsPrerequisites || topicsPrerequisites) && (
+            <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-xl p-6">
+              <h2 className="text-xl font-semibold text-white mb-4">Related Topics &amp; Prerequisites</h2>
+
+              <div>
+                <h3 className="text-blue-300 font-semibold">Related Topics</h3>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  {loadingTopicsPrerequisites
+                    ? Array.from({ length: 5 }).map((_, index) => (
+                        <span
+                          key={`topics-skeleton-${index}`}
+                          className="h-8 w-28 rounded-full border border-white/20 bg-blue-500/20 animate-pulse"
+                        />
+                      ))
+                    : topicsPrerequisites?.relatedTopics.map((topic, index) => (
+                        <span
+                          key={`${topic}-${index}`}
+                          className="border border-white/20 bg-blue-500/20 text-blue-300 rounded-full px-3 py-1 text-sm"
+                        >
+                          {topic}
+                        </span>
+                      ))}
+                </div>
+              </div>
+
+              <div className="my-5 border-t border-white/10" />
+
+              <div>
+                <h3 className="text-blue-300 font-semibold">Prerequisites</h3>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  {loadingTopicsPrerequisites
+                    ? Array.from({ length: 4 }).map((_, index) => (
+                        <span
+                          key={`prereq-skeleton-${index}`}
+                          className="h-8 w-32 rounded-full border border-white/20 bg-blue-500/20 animate-pulse"
+                        />
+                      ))
+                    : topicsPrerequisites?.prerequisites.map((prerequisite, index) => (
+                        <span
+                          key={`${prerequisite}-${index}`}
+                          className="border border-white/20 bg-blue-500/20 text-blue-300 rounded-full px-3 py-1 text-sm"
+                        >
+                          {prerequisite}
+                        </span>
+                      ))}
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* AI Responses */}
           {aiResponses.length > 0 && (
