@@ -413,21 +413,17 @@ const NoteDetail: React.FC = () => {
   };
 
   const handleFeedback = (messageId: string, feedback: "good" | "bad") => {
-    setFeedbackMap((prev) => {
-      const current = prev[messageId] || null;
-      if (current === feedback) {
-        return {
-          ...prev,
-          [messageId]: null,
-        };
-      }
+    const current = feedbackMap[messageId] || null;
+    const nextFeedback = current === feedback ? null : feedback;
 
+    setFeedbackMap((prev) => ({
+      ...prev,
+      [messageId]: nextFeedback,
+    }));
+
+    if (nextFeedback) {
       toast.success("We got your feedback", { position: "top-right" });
-      return {
-        ...prev,
-        [messageId]: feedback,
-      };
-    });
+    }
   };
 
   const handleDeleteNote = async () => {

@@ -6,9 +6,11 @@ import {
   Navigate,
   useNavigate,
   Link,
+  useLocation,
 } from "react-router-dom";
 import { Brain } from "lucide-react";
 import { useAuthStore } from "./stores/auth";
+import { useContentRejectionStore } from "./stores/contentRejection";
 import toast, { Toaster } from "react-hot-toast";
 import Landing from "./pages/Landing";
 import Dashboard from "./pages/Dashboard";
@@ -21,6 +23,8 @@ import Profile from "./pages/Profile";
 import Quizzes from "./pages/Quizzes";
 import QuizAttempt from "./pages/QuizAttempt";
 import Performance from "./pages/Performance";
+import GlobalChatbot from "./components/GlobalChatbot";
+import ContentRejectionModal from "./components/ContentRejectionModal";
 
 // Basic auth pages (will be enhanced later)
 const Login = () => {
@@ -196,7 +200,22 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   return user ? <>{children}</> : <Navigate to="/login" replace />;
 };
 
+// Chatbot container with auth and route checks
+const ChatbotContainer = () => {
+  const { user } = useAuthStore();
+  const location = useLocation();
+
+  // Don't show on auth pages or landing page
+  const isAuthPage = ["/", "/login", "/register"].includes(location.pathname);
+
+  if (!user || isAuthPage) return null;
+  return <GlobalChatbot />;
+};
+
 function App() {
+  const { isRejectionModalOpen, closeRejectionModal } =
+    useContentRejectionStore();
+
   return (
     <Router>
       <Toaster position="top-right" />
@@ -284,6 +303,11 @@ function App() {
           }
         />
       </Routes>
+      <ChatbotContainer />
+      <ContentRejectionModal
+        isOpen={isRejectionModalOpen}
+        onClose={closeRejectionModal}
+      />
     </Router>
   );
 }

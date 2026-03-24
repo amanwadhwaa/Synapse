@@ -14,6 +14,7 @@ import {
   normalizePreferredLanguage,
 } from "../services/preferredLanguage";
 import { azureOpenAIClient, azureOpenAIModel } from "../services/azureOpenAI";
+import { moderateContent, logModerationRejection } from "../services/contentModeration";
 const speechSdk = require("microsoft-cognitiveservices-speech-sdk");
 const { PDFParse } = require("pdf-parse");
 
@@ -388,6 +389,18 @@ router.post("/text", authMiddleware, async (req: AuthRequest, res) => {
       return res.status(400).json({ error: "Content required" });
     }
 
+    // Moderate content before saving
+    const moderationResult = await moderateContent(rawText);
+    if (!moderationResult.safe) {
+      logModerationRejection(req.user!.id, moderationResult.category, rawText);
+      return res.status(400).json({
+        error: "CONTENT_REJECTED",
+        message:
+          "SYNAPSE was unable to process this note as it contains content that violates our community guidelines.",
+        category: moderationResult.category,
+      });
+    }
+
     const note = await prisma.note.create({
       data: {
         userId: req.user!.id,
@@ -505,6 +518,18 @@ router.post(
         translatedToEnglish,
         translationFailed,
       } = await normalizeVoiceTextToEnglish(transcribedText);
+
+      // Moderate the transcribed content
+      const moderationResult = await moderateContent(textToSave);
+      if (!moderationResult.safe) {
+        logModerationRejection(userId, moderationResult.category, textToSave);
+        return res.status(400).json({
+          error: "CONTENT_REJECTED",
+          message:
+            "SYNAPSE was unable to process this note as it contains content that violates our community guidelines.",
+          category: moderationResult.category,
+        });
+      }
 
       if (mode === "append") {
         const noteId = typeof req.body.noteId === "string" ? req.body.noteId.trim() : "";
@@ -687,6 +712,24 @@ router.post(
 
       if (!extractedText) {
         return res.status(400).json({ error: "No text could be extracted from this PDF" });
+      }
+
+      // Moderate the extracted PDF content
+      const moderationResult = await moderateContent(extractedText);
+      if (!moderationResult.safe) {
+        logModerationRejection(req.user!.id, moderationResult.category, extractedText);
+        // Delete the uploaded blob since we're rejecting it
+        try {
+          await deleteAzureBlobByUrl(fileUrl);
+        } catch (deleteError) {
+          console.error("Failed to delete rejected PDF blob:", deleteError);
+        }
+        return res.status(400).json({
+          error: "CONTENT_REJECTED",
+          message:
+            "SYNAPSE was unable to process this PDF as it contains content that violates our community guidelines.",
+          category: moderationResult.category,
+        });
       }
 
       const note = await prisma.note.create({

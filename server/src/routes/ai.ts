@@ -11,6 +11,7 @@ import {
   ChatMessage,
 } from "../services/aiService";
 import { getPreferredLanguage } from "../services/preferredLanguage";
+import { moderateContent, logModerationRejection } from "../services/contentModeration";
 
 const router = express.Router();
 
@@ -78,9 +79,21 @@ router.post("/generate-quiz", authMiddleware, async (req: AuthRequest, res) => {
       return res.status(404).json({ error: "Note not found" });
     }
 
+    const contentToProcess = content || note.rawText;
+
+    // Moderate the content before generating quiz
+    const moderationResult = await moderateContent(contentToProcess);
+    if (!moderationResult.safe) {
+      logModerationRejection(req.user!.id, moderationResult.category, contentToProcess);
+      return res.status(400).json({
+        error: "CONTENT_REJECTED",
+        message: "Unable to generate quiz from this content.",
+      });
+    }
+
     const preferredLanguage = await getPreferredLanguage(req.user!.id);
     const questions = await generateQuizQuestions(
-      content || note.rawText,
+      contentToProcess,
       level || 3,
       preferredLanguage,
     );

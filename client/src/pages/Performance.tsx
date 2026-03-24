@@ -70,7 +70,7 @@ function Performance() {
 
   const showMainLoading = loading;
   const showMainError = !loading && !data;
-  const showMainEmpty = !loading && Boolean(data) && data.totalQuizzes === 0;
+  const showMainEmpty = !loading && (data?.totalQuizzes ?? 0) === 0;
 
   // Prepare chart data
   const correctTotal = (data?.topicBreakdown || []).reduce((sum, item) => sum + item.correct, 0);
@@ -196,25 +196,25 @@ function Performance() {
           <StatCard
             icon={BarChart3}
             label="Total Quizzes"
-            value={data.totalQuizzes}
+            value={data?.totalQuizzes ?? 0}
             color="from-[var(--color-primary)] to-purple-600"
           />
           <StatCard
             icon={TrendingUp}
             label="Average Score"
-            value={`${data.averageScore}%`}
+            value={`${data?.averageScore ?? 0}%`}
             color="from-blue-500 to-cyan-600"
           />
           <StatCard
             icon={Award}
             label="Best Subject"
-            value={data.bestSubject || "—"}
+            value={data?.bestSubject || "—"}
             color="from-green-500 to-emerald-600"
           />
           <StatCard
             icon={AlertCircle}
             label="Weakest Subject"
-            value={data.weakestSubject || "—"}
+            value={data?.weakestSubject || "—"}
             color="from-orange-500 to-red-600"
           />
         </div>
@@ -230,7 +230,7 @@ function Performance() {
               <div>
                 <h2 className="text-2xl font-bold text-white mb-4">AI Study Coach Analysis</h2>
                 <div className="text-gray-200 leading-relaxed text-lg">
-                  <ReactMarkdown components={markdownComponents}>{data.aiAnalysis}</ReactMarkdown>
+                  <ReactMarkdown components={markdownComponents}>{data?.aiAnalysis ?? ""}</ReactMarkdown>
                 </div>
               </div>
             </div>
@@ -245,7 +245,7 @@ function Performance() {
             <div className="relative bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-6 hover:bg-white/10 transition-all duration-300">
               <h2 className="text-xl font-semibold text-white mb-6">Score Trend Over Time</h2>
               <ResponsiveContainer width="100%" height={300}>
-                <LineChart data={data.scoreOverTime}>
+                <LineChart data={data?.scoreOverTime ?? []}>
                   <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" />
                   <XAxis dataKey="date" stroke="rgba(255,255,255,0.6)" />
                   <YAxis stroke="rgba(255,255,255,0.6)" />
@@ -360,7 +360,7 @@ function Performance() {
             <div className="relative bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-6 hover:bg-white/10 transition-all duration-300">
               <h2 className="text-xl font-semibold text-white mb-6">Score Distribution</h2>
               <ResponsiveContainer width="100%" height={300}>
-                <BarChart data={data.scoreDistribution}>
+                <BarChart data={data?.scoreDistribution ?? []}>
                   <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" />
                   <XAxis dataKey="range" stroke="rgba(255,255,255,0.6)" />
                   <YAxis stroke="rgba(255,255,255,0.6)" />
@@ -383,9 +383,9 @@ function Performance() {
             <div className="absolute -inset-0.5 bg-gradient-to-r from-purple-500 to-pink-600 rounded-2xl blur opacity-20 group-hover:opacity-40 transition duration-1000" />
             <div className="relative bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-6 hover:bg-white/10 transition-all duration-300">
               <h2 className="text-xl font-semibold text-white mb-6">Average Score by Subject</h2>
-              {data.scoreBySubject.length > 0 ? (
+              {(data?.scoreBySubject?.length ?? 0) > 0 ? (
                 <ResponsiveContainer width="100%" height={300}>
-                  <BarChart data={data.scoreBySubject}>
+                  <BarChart data={data?.scoreBySubject ?? []}>
                     <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" />
                     <XAxis dataKey="subject" stroke="rgba(255,255,255,0.6)" />
                     <YAxis stroke="rgba(255,255,255,0.6)" />
@@ -430,7 +430,7 @@ function Performance() {
               <div className="bg-white/5 rounded-2xl p-6 h-80 animate-pulse" />
               <div className="bg-white/5 rounded-2xl p-6 h-80 animate-pulse" />
             </div>
-          ) : !brainFatigueData || brainFatigueData.totalAttempts < 5 ? (
+          ) : !brainFatigueData || (brainFatigueData.totalAttempts ?? 0) < 5 ? (
             <div className="group relative">
               <div className="absolute -inset-0.5 bg-gradient-to-r from-orange-500 to-red-600 rounded-2xl blur opacity-20 group-hover:opacity-40 transition duration-1000" />
               <div className="relative bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-8 hover:bg-white/10 transition-all duration-300">
@@ -443,7 +443,7 @@ function Performance() {
                     <p className="text-gray-300">
                       Take more quizzes at different times to unlock Brain Fatigue Analysis. 
                       Need at least 5 quiz attempts across various hours/days.
-                      {brainFatigueData ? ` (Current: ${brainFatigueData.totalAttempts} attempts)` : ''}
+                      {brainFatigueData ? ` (Current: ${brainFatigueData.totalAttempts ?? 0} attempts)` : ''}
                     </p>
                   </div>
                 </div>
@@ -871,7 +871,7 @@ function Performance() {
         <div className="space-y-6">
           <h2 className="text-2xl font-bold text-white mb-6">Detailed Subject Analysis</h2>
           {Object.entries(quizzesBySubject).map(([subject, quizzes]) => {
-            const subjectData = data.scoreBySubject.find(s => s.subject === subject);
+            const subjectData = data?.scoreBySubject?.find((s) => s.subject === subject);
             const averageScore = subjectData?.averageScore || 0;
             const isExpanded = expandedSubjects.has(subject);
 

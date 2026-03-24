@@ -3,7 +3,8 @@ import multer from 'multer';
 import { AuthRequest, authMiddleware } from '../middleware/auth';
 import { extractNotesFromImageBase64 } from '../services/noteVision';
 import prisma from '../prisma';
-import { uploadBufferToAzureBlob } from '../services/fileStorage';
+import { uploadBufferToAzureBlob, deleteAzureBlobByUrl } from '../services/fileStorage';
+import { moderateContent, logModerationRejection } from '../services/contentModeration';
 
 const router = express.Router();
 
@@ -108,6 +109,24 @@ router.post('/upload-image', authMiddleware, upload.single('image'), async (req:
       originalFileName: originalName,
       folder: 'images',
     });
+
+    // Moderate the extracted image content
+    const moderationResult = await moderateContent(finalText);
+    if (!moderationResult.safe) {
+      logModerationRejection(req.user!.id, moderationResult.category, finalText);
+      // Delete the uploaded blob since we're rejecting it
+      try {
+        await deleteAzureBlobByUrl(fileUrl);
+      } catch (deleteError) {
+        console.error('Failed to delete rejected image blob:', deleteError);
+      }
+      return res.status(400).json({
+        error: 'CONTENT_REJECTED',
+        message:
+          'SYNAPSE was unable to process this image as it contains content that violates our community guidelines.',
+        category: moderationResult.category,
+      });
+    }
 
     const note = await prisma.note.create({
       data: {

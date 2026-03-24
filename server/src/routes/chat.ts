@@ -6,7 +6,10 @@ import type { ChatMessage as AIChatMessage } from "../services/aiService";
 import {
   getPreferredLanguage,
   normalizePreferredLanguage,
+  buildPreferredLanguageInstruction,
 } from "../services/preferredLanguage";
+import { azureOpenAIClient, azureOpenAIModel } from "../services/azureOpenAI";
+import { moderateContent, logModerationRejection } from "../services/contentModeration";
 
 const router = express.Router();
 
@@ -72,6 +75,18 @@ router.post("/:noteId", authMiddleware, async (req: AuthRequest, res) => {
       return res.status(404).json({ error: "Note not found" });
     }
 
+    // Moderate user message before processing
+    const messageText = message.trim();
+    const moderationResult = await moderateContent(messageText);
+    if (!moderationResult.safe) {
+      logModerationRejection(req.user!.id, moderationResult.category, messageText);
+      return res.status(400).json({
+        error: "CONTENT_REJECTED",
+        message:
+          "I'm sorry, I can't help with that. I'm here to help you study and learn — let's keep our conversation educational! 📚",
+      });
+    }
+
     const userMessage = await prisma.chatMessage.create({
       data: {
         noteId,
@@ -135,6 +150,86 @@ router.post("/:noteId", authMiddleware, async (req: AuthRequest, res) => {
   } catch (error) {
     console.error("CHAT MESSAGE ERROR:", error);
     return res.status(500).json({ error: "Failed to process chat message" });
+  }
+});
+
+router.post("/global", authMiddleware, async (req: AuthRequest, res) => {
+  try {
+    const { message, conversationHistory } = req.body as {
+      message?: string;
+      conversationHistory?: Array<{ role: "user" | "assistant"; content: string }>;
+    };
+
+    if (!message || !message.trim()) {
+      return res.status(400).json({ error: "message is required" });
+    }
+
+    const messageText = message.trim();
+
+    // Moderate user message before processing
+    const moderationResult = await moderateContent(messageText);
+    if (!moderationResult.safe) {
+      logModerationRejection(req.user!.id, moderationResult.category, messageText);
+      return res.status(400).json({
+        error: "CONTENT_REJECTED",
+        message:
+          "I'm sorry, I can't help with that. I'm here to help you study and learn — let's keep our conversation educational! 📚",
+      });
+    }
+
+    const userId = req.user!.id;
+    const preferredLanguage = await getPreferredLanguage(userId);
+    const resolvedLanguage = normalizePreferredLanguage(preferredLanguage);
+    const languageInstruction = buildPreferredLanguageInstruction(resolvedLanguage);
+
+    const historyMessages = (conversationHistory || [])
+      .filter((entry) => entry.content && entry.content.trim())
+      .map((entry) => ({
+        role: entry.role,
+        content: entry.content.trim(),
+      }));
+
+    const systemPrompt = `You are SYNAPSE Assistant, a helpful AI built into the SYNAPSE study app.
+You have two areas of expertise:
+
+1. SYNAPSE APP KNOWLEDGE:
+SYNAPSE is an AI-powered study buddy app with these features:
+- Notes: Create typed notes, upload images/PDFs/PPTs for AI analysis, voice recording with transcription and translation
+- Note Detail: Simplify, Summarize, Generate Quiz, Audio Lecture (AI tutor reads notes aloud), Ask SYNAPSE chatbot (note-specific)
+- Dashboard: Study activity heatmap, performance overview, FAB quick actions
+- Study Planner: Plan and organize study sessions
+- Quizzes: AI-generated quizzes from notes, performance tracking
+- Performance: AI Study Coach Analysis, Score Trend, Subject Performance, Brain Fatigue Detector, Forgetting Curve
+- Profile: Preferred language setting (affects all AI outputs), account settings
+- Pomodoro Timer: Floating timer with subject selector, persists across pages
+- Global Assistant: That's you! Available on every page
+
+2. GENERAL STUDY HELP:
+You can answer general academic questions, explain concepts, suggest study techniques, help with time management, and provide learning strategies.
+
+Always be encouraging, clear and concise. If asked about something outside these two areas, politely redirect to what you can help with.`;
+
+    const completion = await azureOpenAIClient.chat.completions.create({
+      model: azureOpenAIModel,
+      messages: [
+        {
+          role: "system",
+          content: `${languageInstruction}\n\n${systemPrompt}`,
+        },
+        ...historyMessages,
+        {
+          role: "user",
+          content: message.trim(),
+        },
+      ],
+    });
+
+    const reply = completion.choices[0]?.message?.content || "I could not generate a response.";
+
+    return res.json({ reply });
+  } catch (error) {
+    console.error("GLOBAL CHAT ERROR:", error);
+    return res.status(500).json({ error: "Failed to process global chat message" });
   }
 });
 

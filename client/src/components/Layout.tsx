@@ -15,6 +15,7 @@ import {
 import { useAuthStore } from '../stores/auth'
 import { useState } from 'react'
 import PomodoroTimer from './PomodoroTimer'
+import ResponsibleAIBadge from './ResponsibleAIBadge'
 
 interface LayoutProps {
   children: React.ReactNode
@@ -96,6 +97,11 @@ function Layout({ children }: LayoutProps) {
               )
             })}
           </nav>
+
+          {/* Responsible AI Badge */}
+          <div className="px-4 py-2">
+            <ResponsibleAIBadge />
+          </div>
 
           {/* User section */}
           <div className="px-4 py-6 border-t border-white/10">
