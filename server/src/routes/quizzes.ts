@@ -298,7 +298,9 @@ router.get("/brain-fatigue", authMiddleware, async (req: AuthRequest, res) => {
       },
     });
 
-    if (attempts.length < 5) {
+    const totalAttempts = attempts.length;
+
+    if (totalAttempts < 5) {
       return res.json({
         byHour: [],
         byDay: [],
@@ -307,6 +309,7 @@ router.get("/brain-fatigue", authMiddleware, async (req: AuthRequest, res) => {
         peakDay: "",
         worstDay: "",
         fatigueDropPercent: 0,
+        totalAttempts,
         aiInsight: "Take more quizzes at different times to unlock Brain Fatigue Analysis",
       });
     }
@@ -431,6 +434,7 @@ Be specific with times and days. Maximum 4 sentences.`;
       peakDay,
       worstDay,
       fatigueDropPercent,
+      totalAttempts,
       aiInsight,
     });
   } catch (error) {

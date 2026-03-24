@@ -665,10 +665,10 @@ function Performance() {
               </ul>
               <p className="text-sm font-semibold mb-1">Status Badge Guide:</p>
               <ul className="list-disc list-inside text-sm mb-3">
-                <li>Fresh (0-3 days) = Memory is strong, no action needed</li>
-                <li>Fading (4-7 days) = Review soon to strengthen memory</li>
-                <li>Critical (8-14 days) = Review today or risk forgetting</li>
-                <li>Forgotten (14+ days) = Memory likely lost, retake quiz</li>
+                <li>🟢 Fresh (0-3 days) = Memory is strong, no action needed</li>
+                <li>🟡 Fading (4-7 days) = Review soon to strengthen memory</li>
+                <li>🔴 Critical (8-14 days) = Review today or risk forgetting</li>
+                <li>⚫ Forgotten (14+ days) = Memory likely lost, retake quiz</li>
               </ul>
               <p className="text-sm">Spaced Repetition Tip: The best time to review is just BEFORE you forget — not immediately after learning. This is called Spaced Repetition and it's the most scientifically proven study technique.</p>
             </div>
@@ -713,11 +713,11 @@ function Performance() {
 
                   const getStatusIcon = (status: string) => {
                     switch (status) {
-                      case "fresh": return "F";
-                      case "fading": return "!";
-                      case "critical": return "C";
-                      case "forgotten": return "X";
-                      default: return "?";
+                      case "fresh": return "🟢";
+                      case "fading": return "🟡";
+                      case "critical": return "🔴";
+                      case "forgotten": return "⚫";
+                      default: return "❔";
                     }
                   };
 
