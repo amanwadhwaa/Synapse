@@ -112,6 +112,7 @@ model Exam {
   userId     String
   subject    String
   examDate   DateTime
+  time       String?
   difficulty String
   createdAt  DateTime @default(now())
 }

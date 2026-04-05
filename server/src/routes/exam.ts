@@ -20,12 +20,13 @@ router.get("/", async (req, res) => {
 
 router.post("/", async (req, res) => {
   try {
-    const { subject, examDate, difficulty, userId } = req.body;
+    const { subject, examDate, time, difficulty, userId } = req.body;
 
     const exam = await prisma.exam.create({
       data: {
         subject,
         examDate: new Date(examDate),
+        time,
         difficulty,
         userId,
       },

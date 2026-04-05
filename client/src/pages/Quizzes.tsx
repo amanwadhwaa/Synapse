@@ -113,7 +113,7 @@ function Quizzes() {
                           onClick={() => navigate(`/quizzes/${quiz.id}`)}
                           className="rounded-xl bg-gradient-to-r from-blue-600 to-cyan-500 px-5 py-2.5 text-white font-semibold shadow-lg shadow-blue-500/30 transition-all duration-200 hover:from-blue-500 hover:to-cyan-400"
                         >
-                          Attempt Quiz
+                          {quiz.bestScore !== null ? "Retake Quiz" : "Attempt Quiz"}
                         </button>
                       </div>
                     </article>
